@@ -1,0 +1,38 @@
+%% home directory
+/var/folders/05/gbn36s6x2t9cr1fsbjnl7k5h0000gn/T//RtmphEQc4i
+%% shape parameters
+		% length in mm
+		% rho/L
+		% L/a
+		% tapering order
+		% length average flag: 0-no average,	1-average
+		% relative length standard deviation (meaningless for no average)
+		% relative length increment(meaningless for no average)
+		% shape profile name ( -1 if profile is not specified)
+		% number of points for axis smoothing (meaningless if profile is not specified)
+		% number of points for tapering function smoothing (meaningless if profile is not specified)
+%% orientation parameters
+		% mean incident angle (deg)
+		% angle variation range - starting value (deg)
+		% angle variation range - ending value (deg)
+		% average option flag: 0-no average,	1-average
+		% PDF flag: 1-Uniform		2-Gaussian
+		% PDF parameter: half range for Uniform PDF,
+%		% standard deviation for Gaussian (deg)
+%		% (meaningless for no average)
+		% angle increment	(meaningless for no average)
+%% physical property parameters
+		% mean density contrast (g0)
+		% mean sound speed contrast (h0)
+		% number of body segments (1-homogeneous body)
+		% standard deviation of g0 (meaningless for homogeneous body)
+		% standard deviation of h0 (meaningless for homogeneous body)
+		% correlation length as a percentage of body length L
+%% simulation parameters
+		% integration	points along body axis
+		% number of output points
+		% output variable index: 1-scatting amplitude, 2-cross section, 3-TS, 4-RTS
+		% variable: 1-frequency (kHz), 2-ang(deg),		3-ka
+		% start value for the variable
+		% end value for the variable
+		% frequency (kHz), enabled for variable being angle only

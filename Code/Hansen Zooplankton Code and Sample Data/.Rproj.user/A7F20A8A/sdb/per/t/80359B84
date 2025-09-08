@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "## get_map_data ##\n\n# Read and save bathymetry data from NOAA server (etopo1), and define Roseway Basin ATBA, for future plotting\n\nget_map_data = function(cache_dir='cache'){\n  \n  # map file\n  map_file = paste0(cache_dir, '/map.rda')\n  \n  # Grab data from NOAA server ----------------------------------------------\n  \n  if (!file.exists(map_file)) { # only grab data if we don't have it\n    \n    # useful libraries\n    library(oce)\n    library(marmap)\n    data(coastlineWorldFine, package=\"ocedata\")\n    \n    # bathymetry data\n    b <- getNOAA.bathy(-70,-55,40,55,1) \n    bathyLon <- as.numeric(rownames(b))\n    bathyLat <- as.numeric(colnames(b))\n    bathyZ <- as.numeric(b)\n    dim(bathyZ) <- dim(b)\n    bathyZ[bathyZ > 0] <- NA # to blank out the land\n    \n    # save all data\n    save(bathyLon, bathyLat, bathyZ, b,\n         coastlineWorldFine,\n         file = map_file)\n    \n    message('Map data saved at: ', map_file)\n    \n  } else {\n    message('Using map data from: \\n', map_file)\n  }\n}",
+    "created" : 1512746939090.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2512245579",
+    "id" : "80359B84",
+    "lastKnownWriteTime" : 1512746984,
+    "last_content_update" : 1512746984752,
+    "path" : "~/Projects/gsl_habitat/functions/get_map_data.R",
+    "project_path" : "functions/get_map_data.R",
+    "properties" : {
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

@@ -1,0 +1,215 @@
+date,time,time,event,location,Whales?,comments,initials,page,,
+,(24h ADT),(24h UTC),"(sono##, tubss##, net###, cage###)","Lat, Long (deg. min)","(yes, maybe, no, NA)",,,,,
+18-Sep,9:28:00,12:28:00,Battery check,Dock,No,"OPC 26.33 V
+Multinet 9.21 V
+Walkie-talkies full
+Vemco Bay chargin
+CTD 8.8 V",KD,1 of 1,,
+,9:57:00,12:57:00,Abort mission,"44 54.52 N
+66 50.68 W",No,Swells too large,DM,1,,
+,10:08:00,13:08:00,Glider off,"44 55.58 N
+66 52.29 W",No,NA,DM,1,,
+,,,,,,,,,,
+19-Sep,11:17:00,14:17:00,Glider deployment,"44 52.870 N
+66 47.974 W",No,"Glider programmed to go to northern waypoint during testing, then turn around for mission
+Issues: cradle got caught in too-long rope loop -> tagline on cart next time!",DM,1 of 3,,
+,11:25:00,14:25:00,Glider testing,"44 52.870 N
+66 47.855 W",No,"Dive to 5 m and resurface (11:25)
+Retrieved float (11:36)
+Dive to 15 m and resurface (11:43)
+Compass calibrations (11:55)",DM,1,,
+,13:29:00,16:29:00,Glider mission start,"Boat: 
+44 54.174 N
+66 46.740 W
+Glider:
+44 54.2612 N
+66 46.7244 W",No,"Mission abort at 19:25 ADT if we don't quit early
+Initial dive to 60m -- after resurfacing, check AZFP, readjust deep inflection point, start cage/net
+Mission start proper: 14:07",DM,1,,
+,13:39:00,16:39:00,Boat echosounder turned off,"44 54.185 N
+66 46.637 W",No,Boat echosounder was interfering with glider,DM,1,,
+,14:17:00,17:17:00,cage005,"44 54.306 N
+66 46.828 W",No,"54 kHz fish tag
+Deployed to 107 m",DM,1,,
+,14:50:00,17:50:00,multi004,"44 54.316 N
+66 46.822 W",No,Scant amounts of plankton in nets,DM,2 of 3,,
+,15:15:00,18:15:00,cage006,"44 53.564 N
+66 47.251 W",No,143 m depth total,DM,2,,
+,15:32:00,18:32:00,multi004 sample processing,"44 53.102 N
+66 47.376 W",No,"Not enough biomass for cryo
+Sample jar #s 207492-207496
+Roughly 50 mins processing time",DM,2,,
+,16:36:00,19:36:00,cage007,"44 52.413 N
+66 47.559 W",No,146 m depth total,DM,2,,
+,16:54:00,19:54:00,multi005,"44 52.372 N
+66 47.662 W",No,More plankton,DM,2,,
+,17:19:00,20:19:00,cage008,"44 52.036 N
+66 48.479 W",No,145 depth total,DM,3 of 3,,
+,17:29:00,20:29:00,multi005 sample processing,"44 51.847 N
+66 48.818 W",No,Plankton mostly in deep nets,DM,,,
+,18:20:00,21:20:00,Glider recovery,"44 49.442 N
+66 50.549 W",No,NA,DM,,,
+,18:42:00,21:42:00,Battery check,NA,No,"Multinet 8.9 V
+CTD 8.7 V
+OPC 26.01 V",DM,,,
+,,,,,,,,,,
+20-Sep,7:45:00,10:45:00,Battery swap,NA,No,"Swapped Seabird battery (took out battery B, replaced with battery SB)
+SB voltage 11.3 V",DM,1 of 3,,
+,8:01:00,11:01:00,Battery swap,NA,No,"Reviewed files from connection w/ SBER and it says that ""dv/dt step change"" when voltage less than 8.7 V. This was the issue why NO data was collected yesterday
+NEW CUTOFF 9V",MP,1,,
+,8:30:00,11:30:00,Glider deployment,"44 50.466 N
+66 48.567 W",No,"Tow line attached to cart this time, no issues with cart",DM,1,,
+,9:22:00,12:22:00,cage009,"44 50.360 N
+66 47.960 W",No,110 m total depth,DM,1,,
+,9:47:00,12:47:00,multi006,"44 50.426 N
+66 49.850 W",No,Lots of swell yikes,DM,1,,
+,10:08:00,13:08:00,cage010,"44 50.815 N
+66 47.507 W",No,,,2 of 3,,
+,10:44:00,13:44:00,cage011,"44 51.676 N
+66 46.772 W",No,,,2,,
+,11:09:00,14:09:00,multi007,"44 51.733 N
+66 46.700 W",No,,,2,,
+,11:33:00,14:33:00,cage012,"44 52.44 N
+66 46.464 W",No,Instruments not turned off until 12:36,DM,2,,
+,12:41:00,15:41:00,Glider recovery,"44 53.813 N
+66 45.690 W",No,,DM,2,,
+,12:58:00,15:58:00,cage013,"44 53.088 N
+66 46.189 W",No,"Bottom of nets dragged along seaflor; reset and try again
+No data",DM,3 of 3,,
+,13:17:00,16:17:00,multi008,"44 53.163 N
+66 46.073 W",No,,DM,3,,
+,13:53:00,16:53:00,multi009,"44 53.126 N
+66 46.168 W",No,,DM,3,,
+,14:18:00,17:18:00,cage014,"44 53.534 N
+66 45.680",No,,,3,,
+,15:08:00,18:08:00,multi010,"44 51.688 N
+66 46.702 W",No,146 m depth,DM,3,,
+,,,,,,,,,,
+21-Sep,6:52:00,9:52:00,Battery check,NA,No,"Swapped out OPC battery #3
+Battery 3 lasted 14 casts before needing a charge. Charged to 28.25 V
+Swapped in battery #2 @ 26.7 V",,1 of 4,,
+,9:15:00,12:15:00,On watch,NA,No,Kim on whale watch in GMB,,1,,
+,9:41:00,12:41:00,Off watch,NA,No,No whales sighted,,1,,
+,9:55:00,12:55:00,NA,NA,No,"200 kHz echosounder shows layer of likely copepods at 30-60 m
+Layer does not appear on 38, 75, or 130 kHz echosounders, so likely copepods
+Captain says layer disappeared 2-3 miles back",,1,,
+,10:0?,13:0?,Glider deployment,"44 40.888 N
+66 29.544 W",No,NA,DM,1,,
+,10:22:00,13:22:00,NA,NA,No,"Second probable-copepod layer at 100m depth, in addition to 30-60m layer
+Jude in and out of signal, Fox has no service, sat phone works in wheelhouse",DM,2 of 4,,
+,10:48:00,13:48:00,Echosunder,"44 41.131 N
+66 29.089 W",No,"200 kHz echosounder momentarily turned on to check copepod layers; 20-50 m and 90-110m layers
+Kim has picture of echosounder
+Echosounder off at 10:50 ADT",,2,,
+,10:52:00,13:52:00,cage015,"44 41.131 N
+66 29.129 W",No,NA,,2,,
+,11:14:00,14:14:00,multi011,"44 41.206 N
+66 29l.146 W",No,Pinger depth 170 -> check if correct,,2,,
+,11:39:00,14:39:00,cage016,"44 41.881 N
+66 29.064 W",Yes,One breaching humpback spotted in distance,DM,2,,
+,12:33:00,15:33:00,cage017,"44 43.605 N
+66 28.549 W",No,Pinger says max of 153m; check CTD data for recorded depth + compare,DM,3 of 4,,
+,12:47:00,15:47:00,Echosounder,NA,No,"Layer from 0-40m at 200 kHz; little bit at 100m
+Echosounder off at 14:49 ADT",DM,3,,
+,13:00:00,16:00:00,multi012,"44 43.675 N
+66 28.635 W",No,"Fiddled with depth pinger to determine how to stop running the net into the ground
+Undershot unlocking depth -> nets did not fire",DM,3,,
+,13:22:00,16:22:00,multi013,"44 43.702 N
+66 28.719 W",No,NA,,3,,
+,13:44:00,16:44:00,cage018,"44 44.326 N
+66 28.689 W",No,NA,,3,,
+,14:12:00,17:12:00,cage019,"44 45.910 N
+66 28.268 W",No,NA,DM,4 of 4,,
+,14:31:00,17:31:00,multi014,"44 45.921 N
+66 28.269 W",No,NA,DM,4,,
+,14:56:00,17:56:00,cage020,"44 46.468 N
+66 28.690 W",No,NA,DM,4,,
+,15:22:00,18:22:00,Battery check,NA,No,"OPC 25.99 V
+Multinet 8.89 V",DM,4,,
+,,,,,,,,,,
+24-Sep,8:11:00,11:11:00,Battery check/swap,Dock,No,"Swapped OPC battery 2 for battery 3
+Batt 2 swapped @ 25.95 V
+Batt 3 @ 26.85 V
+Multinet 9V; CTD batt 11.7 V",DM/KD,1 of 4,,
+,10:16:00,13:16:00,On watch,NA,No,Kim on whale watch,KD,1,,
+,11:04:00,14:04:00,Off watch,NA,No,"Kim off whale watch
+No whales sighted",KD,1,,
+,11:12:00,14:12:00,Glider deployment,"44 40.937 N
+66 29.546 W",No,NA,DM,1,,
+,11:22:00,14:22:00,Battery swap,NA,No,Communication cable for OPC had battery swapped,DM,1,,
+,11:59:00,14:59:00,cage021,"44 40.582 N
+66 29.350 W",No,,DM,2 of 4,,
+,12:29:00,15:29:00,multi015,"44 40.636 N
+66 29.371 W",No,Aborted tow @ 12:19 due to improperly programmed depths. Redeployed at 12:29,DM,2,,
+,12:59:00,15:59:00,cage022,"44 40.026 N
+66 28.335 W",No,,KD,2,,
+,13:37:00,16:37:00,cage023,"44 41.278 N
+66 28.972 W",No,,DM,2,,
+,14:04:00,17:04:00,multi016,"44 41.340 N
+66 28.139 W",No,,DM,2,,
+,14:27:00,17:27:00,cage024,"44 42.383 N
+66 28.927 W",No,,KD,3 of 4,,
+,15:02:00,18:02:00,cage025,"44 44.418 N
+66 28.927 W",No,,DM,3,,
+,15:22:00,18:22:00,multi017,"44 44.809 N
+66 28.741 W",No,,DM,3,,
+,15:45:00,18:45:00,cage026,"44 45.888 N
+66 28.807 W",No,,KD,3,,
+,16:07:00,19:07:00,cage027,"44 46.742 N
+66 28.678 W",No,,KD,3,,
+,16:27:00,19:27:00,multi018,"44 46.723 N
+66 28.658 W",Yes,"Dolphins sighted, many!",DM,4 of 4,,
+,16:48:00,19:48:00,cage028,"44 46.425 N
+66 28.629 W",No,,DM,4,,
+,,,,,,,,,,
+25-Sep,9:11:00,12:11:00,Battery check,NA,No,"OPC battery check - 26.43 V
+CTD battery check - 12.4 V
+Downloaded CTD data",NH,1 of 3,,
+,12:11:00,15:11:00,Glider 005 Deployment,"44 40.679 N
+66 29.715 W",No,Glider deployed,NH,1,,
+,13:02:00,16:02:00,cage029,"44 40.485 N
+66 29.517 W",No,"Water depth: 186m
+OPC + CTD off at 13:13",NH,1,,
+,13:28:00,16:28:00,multi019,"44 40.432 N
+66 29.483 W",No,Water depth: 187m,NH,1,,
+,13:51:00,16:51:00,cage030,"44 41.080 N
+66 29.481 W",No,Water depth 181m,KD,1,,
+,14:28:00,17:28:00,cage031,"44 41.140 N
+? W",No,,KD,2 of 3,,
+,14:51:00,17:51:00,multi020,"44 41.142 N
+66 29.394 W",No,,NH,2,,
+,15:16:00,18:16:00,cage032,"44 42.105 N
+66 29.613 W",No,,KD,2,,
+,15:54:00,18:54:00,cage033,"44 42.151 N
+66 29.604 W",No,,KD,2,,
+,16:15:00,19:15:00,multi021,"44 42.349 N
+66 29.637 W",No,,,2,,
+,16:38:00,19:38:00,cage034,"44 43.307 N
+66 27.306 W",No,,KD,3 of 3,,
+,,,,,,,,,,
+26-Sep,8:36:00,11:36:00,Glider deployment,"44 54.079 N
+66 46.731 W",No,Brief mishap with cart but glider successfully deployed,DM,1 of 3,,
+,9:24:00,12:24:00,cage035,"44 53.602 N
+66 46.633 W",No,,DM,1,,
+,9:41:00,12:41:00,multi022,"44 53.545 N
+66 46.763 W",No,,DM,1,,
+,10:03:00,13:03:00,cage036,"44 52.988 N
+66 47.363 W",No,Deployed to 140m; bottom depth 148m (overshot a bit),GL,1,,
+,10:36:00,13:36:00,cage037,"44 52.343 N
+66 47.548 W",No,,DM,1,,
+,10:54:00,13:54:00,multi023,"44 52.197 N
+66 47.663 W",No,,DM,2 of 3,,
+,11:14:00,14:14:00,cage038,"44 51.603 N
+66 47.758 W",No,,GL,2,,
+,11:33:00,14:33:00,cage039,"44 50.966 N
+66 48.263 W",No,,KD,2,,
+,11:53:00,14:53:00,multi024,"44 50.901 N
+66 48.228 W",No,,DM,2,,
+,12:10:00,15:10:00,cage040,"44 50.324 N
+66 48.011 W",No,,GL,2,,
+,12:35:00,15:35:00,Glider recovery,"44 49.857 N
+66 49.319 W",No,,DM,3 of 3,,
+,13:09:00,16:09:00,multi025,"44 52.359 N
+66 47.540 W",No,Cryovial tow @ station 019,DM,3,,
+,14:01:00,17:01:00,multi026,"44 54.335 N
+66 47.561 W",No,Cryovial tow @ station 019,,3,,

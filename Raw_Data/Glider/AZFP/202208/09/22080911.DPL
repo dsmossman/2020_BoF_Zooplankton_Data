@@ -1,0 +1,55 @@
+Config for unit '59016' deployed 2022-08-09 11:15:56
+Version Major	3
+Version Minor	18
+Version Date	20180910   
+Unit Serial Number	59016      
+CPU	17338
+Parameter Version	2
+Instrument Type	AZFP
+DataOutput	FLASH
+SoundSpeed	1500.000000
+Acquisition Start:	Jan 01, 1970 00:00:00
+Number of phases	1
+Date span: Jun 22, 2021 20:16:32 - Jun 29, 2021 20:16:31
+---
+Phase 1
+Acquisition Period:	Jun 22, 2021 20:16:32 - Continuous
+Duration	604800 seconds	(7.0000 days)
+Phase Type	'NORMAL'
+Burst Interval	5 sec
+Pings Per Burst	1 pings
+Ping Period	5 sec
+Average Burst Pings	yes
+F1 Frequency    	130 Hz
+F1 Acquire Freq 	1 bool
+F1 Pulse Length 	300 us
+F1 Dig. Rate    	20 kHz (0.0375 m/smpl)
+F1 Range Samples	2666 smpl
+F1 Range Averaging Samples	1 smpl
+F1 LockOutIndex	0 index
+F1 Storage Format	0 (Log Data)
+F2 Frequency    	200 Hz
+F2 Acquire Freq 	1 bool
+F2 Pulse Length 	300 us
+F2 Dig. Rate    	20 kHz (0.0375 m/smpl)
+F2 Range Samples	2666 smpl
+F2 Range Averaging Samples	1 smpl
+F2 LockOutIndex	0 index
+F2 Storage Format	0 (Log Data)
+F3 Frequency    	455 Hz
+F3 Acquire Freq 	1 bool
+F3 Pulse Length 	300 us
+F3 Dig. Rate    	20 kHz (0.0375 m/smpl)
+F3 Range Samples	1333 smpl
+F3 Range Averaging Samples	1 smpl
+F3 LockOutIndex	0 index
+F3 Storage Format	0 (Log Data)
+F4 Frequency    	769 Hz
+F4 Acquire Freq 	1 bool
+F4 Pulse Length 	300 us
+F4 Dig. Rate    	20 kHz (0.0375 m/smpl)
+F4 Range Samples	800 smpl
+F4 Range Averaging Samples	1 smpl
+F4 LockOutIndex	0 index
+F4 Storage Format	0 (Log Data)
+---------------------------------------

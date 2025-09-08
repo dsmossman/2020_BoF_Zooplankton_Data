@@ -1,0 +1,24 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1510871545024.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2949189493",
+    "id" : "7288DD34",
+    "lastKnownWriteTime" : 1536243224,
+    "last_content_update" : 1536243224494,
+    "path" : "~/Projects/2017_GSL_vessel_surveys/master.R",
+    "project_path" : "master.R",
+    "properties" : {
+        "cursorPosition" : "7,16",
+        "docOutlineVisible" : "1",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

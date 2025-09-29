@@ -1,4 +1,5 @@
-setwd("C:/Users/dmossman/Box/2022 MSc Thesis Work")
+rm(list=ls())
+setwd("C:/Users/Delphine/Documents/2020_BoF_Zooplankton_Data")
 
 ## Libraries
 
@@ -14,13 +15,10 @@ library(rstatix)
 library(opcr)
 library(zoo)
 library(ggbreak)
+library(grid)
 
 ## Directories
 
-sourceDirectory('Code/Hansen Zooplankton Code and Sample Data/src',
-                modifiedOnly = F)
-
-function_dir = 'Code/Hansen Zooplankton Code and Sample Data/src/'
 processed_dir = 'Processed_Data/'
 data_dir = 'Raw_Data/'
 figure_dir = 'Visuals/'
@@ -36,140 +34,42 @@ load(paste0(processed_dir, 'Abundance_Data_Biomass.rda'))
 load(paste0(processed_dir, "Cfin_Stages.rda"))
 load(paste0(processed_dir, 'OPC_Data_Full.rda'))
 
+## Edit the opc_speed function to remove the averaging part of instantaneous calculation
+trace(opc_speed,edit=T)
+
+## Edit the opc_abundance function to include speed calculation
+## Uncomment below and copy, then recomment
+
+# function (df, dz = 2, min_size = 1, max_size = 4, good_only = TRUE,
+#           reject_volume = TRUE)
+# {
+#   if (good_only) {
+#     df = dplyr::filter(df, flag == 0)
+#   }
+#   opc_check(df)
+#   df$zbin = bin(df$depth, d = dz)
+#   vol = df %>% group_by(zbin, .drop = FALSE) %>% dplyr::summarize(v = sum(volume_filtered),
+#                                                                   .groups = "drop")
+#   cnt = df %>% unnest_longer(esd) %>% dplyr::filter(esd >=
+#                                                       min_size & esd <= max_size) %>% group_by(zbin, .drop = FALSE) %>%
+#     dplyr::summarize(c = n(), .groups = "drop")
+#   spd = df %>% group_by(zbin, .drop = F) %>% dplyr::summarize(s = mean(speed),
+#                                                               .groups = "drop")
+#   out = full_join(cnt, vol, by = "zbin") %>% full_join(.,
+#                                                        spd, by = "zbin") %>% transmute(depth = relabel(zbin),
+#                                                                                        speed = s, count = c, volume = v, concentration = c/v)
+#   out$concentration[is.infinite(out$concentration)] = NA
+#   if (reject_volume) {
+#     out = drop_volume(df = out, dz = dz)
+#   }
+#   return(out)
+# }
+
+
+# Paste function into this window
+trace(opc_abundance,edit=T)
+
 #####
-
-## Community composition pie charts
-
-Pie_Chart_Data = Net_Data %>% 
-  group_by(station,site,net) %>% 
-  reframe(community_comp = first(community_comp)) %>%
-  group_by(site,community_comp) %>%
-  tally
-Pie_Chart_Data$n = Pie_Chart_Data$n/40 * 100
-
-ggplot(data=Pie_Chart_Data,aes(x="",y=n,fill=community_comp)) +
-  geom_bar(stat="identity",width=1) +
-  scale_fill_viridis_d(begin = 0.2, end = 1) +
-  coord_polar("y",start=0) +
-  theme_void() +
-  geom_text(aes(label = paste0(n, "%")), position = position_stack(vjust=0.5)) +
-  labs(x = NULL, y = NULL, fill = "Community Composition") +
-  facet_wrap(~site) +
-  theme(plot.background = element_rect(fill = 'white',color='white'))
-
-fname=paste0(figure_dir,'Community_Comp_Pie_Chart.png')
-ggsave(filename=fname,scale=2)
-
-#####
-
-## Comparison bar graphs
-
-# Group by "station" (deep, mid, shallow) and basin (GMB, OB), and put into 5 m depth bins
-# This will probably need to be done manually/by hand
-
-# Station numbers:
-# GMB shallow: 10, 13, 17, seafloor depth 158
-# OB shallow: 5, 20, seafloor depth 110
-
-# GMB mid: 9, 16, seafloor depth 160.5
-# OB mid: 3, 7, 18, seafloor depth 127.3
-
-# GMB deep: 8, 12, 15, seafloor depth 169.3
-# OB deep: 4, 6, 19, seafloor depth 135
-
-dz = 5
-min_size = 1.5
-max_size = 2
-
-GMB_Shallow = OPC_Data_Full[OPC_Data_Full$OPC_cast_num %in% c(17,
-                                                              23,
-                                                              31, 32),] %>%
-  filter(depth>1) %>%
-  filter(flag != 'depth') %>%
-  group_by(OPC_cast_num, basin) %>%
-  reframe(
-    opc_biomass(across(), dz = dz, min_size = min_size, max_size = max_size, good_only = F,
-                reject_volume = F)) %>%
-  reframe(depth = depth, mass = mass) %>%
-  group_by(depth) %>%
-  reframe(mass = mean(mass) * 10^-4)
-  
-GMB_Mid = OPC_Data_Full[OPC_Data_Full$OPC_cast_num %in% c(15, 16,
-                                                          29,30),] %>%
-  filter(depth>1) %>%
-  filter(flag != 'depth') %>%
-  group_by(OPC_cast_num, basin) %>%
-  reframe(
-    opc_biomass(across(), dz = dz, min_size = min_size, max_size = max_size, good_only = F,
-                reject_volume = F)) %>%
-  reframe(depth = depth, mass = mass) %>%
-  group_by(depth) %>%
-  reframe(mass = mean(mass) * 10^-4)
-
-GMB_Deep = OPC_Data_Full[OPC_Data_Full$OPC_cast_num %in% c(13, 14,
-                                                           21, 22,
-                                                           27, 28),] %>%
-  filter(depth>1) %>%
-  filter(flag != 'depth') %>%
-  group_by(OPC_cast_num, basin) %>%
-  reframe(
-    opc_biomass(across(), dz = dz, min_size = min_size, max_size = max_size, good_only = F,
-                reject_volume = F)) %>%
-  reframe(depth = depth, mass = mass) %>%
-  group_by(depth) %>%
-  reframe(mass = mean(mass) * 10^-4)
-
-OB_Shallow = OPC_Data_Full[OPC_Data_Full$OPC_cast_num %in% c(7, 8),] %>%
-  filter(depth>1) %>%
-  filter(flag != 'depth') %>%
-  group_by(OPC_cast_num, basin) %>%
-  reframe(
-    opc_biomass(across(), dz = dz, min_size = min_size, max_size = max_size, good_only = F,
-                reject_volume = F)) %>%
-  reframe(depth = depth, mass = mass) %>%
-  group_by(depth) %>%
-  reframe(mass = mean(mass) * 10^-4)
-
-OB_Mid = OPC_Data_Full[OPC_Data_Full$OPC_cast_num %in% c(33),] %>%
-  filter(depth>1) %>%
-  filter(flag != 'depth') %>%
-  group_by(OPC_cast_num, basin) %>%
-  reframe(
-    opc_biomass(across(), dz = dz, min_size = min_size, max_size = max_size, good_only = F,
-                reject_volume = F)) %>%
-  reframe(depth = depth, mass = mass) %>%
-  group_by(depth) %>%
-  reframe(mass = mean(mass) * 10^-4)
-
-OB_Deep = OPC_Data_Full[OPC_Data_Full$OPC_cast_num %in% c(5,
-                                                          35, 36),] %>%
-  filter(depth>1) %>%
-  filter(flag != 'depth') %>%
-  group_by(OPC_cast_num, basin) %>%
-  reframe(
-    opc_biomass(across(), dz = dz, min_size = min_size, max_size = max_size, good_only = F,
-                reject_volume = F)) %>%
-  reframe(depth = depth, mass = mass) %>%
-  group_by(depth) %>%
-  reframe(mass = mean(mass) * 10^-4)
-
-# Fill in the missing depth bins
-
-DFs = sort(grep("OB_|GMB_",names(.GlobalEnv),value=TRUE))
-
-OPC_biomass = data.frame(matrix(0, ncol=7, nrow=40))
-OPC_biomass[,1] = (paste0(seq(0,195,5)))
-names(OPC_biomass)[1] = "Depth_Bin"
-n = 2
-
-for(i in 1:length(DFs)) {
-  test = get(DFs[i])
-  for(j in 1:nrow(test)) {
-    OPC_biomass[which(OPC_biomass$Depth_Bin == test$depth[j]),n] = test$mass[j]
-  }
-  names(OPC_biomass)[n] = DFs[i]
-  n = n+1
-}
 
 # Read in Matlab integration files
 
@@ -187,7 +87,7 @@ dates = c("19", "20", "21", "24", "25", "26")
 # Load in each day
 for (i in 1:length(dates)) {
   filename = paste0(
-    "/Users/dmossman/Box/2022 MSc Thesis Work/Processed_Data/",
+    "/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Processed_Data/",
     dates[i],
     "Sept_Masked_Data.mat"
   )
@@ -227,839 +127,6 @@ for (i in 1:length(DFs)) {
   assign(DFs[i], temp)
   rm(temp)
 }
-
-# Get the masked Sv values for each tow; these are in 1m depth bins already
-
-for (i in 1:length(DFs)) {
-  # for each day
-  integration = get(DFs[i])
-  tows = list()
-  
-  for (j in 1:length(integration)) {
-    # for each tow
-    tows[[j]] = list()
-    
-    # Get the full water column mask (not net-by-net) for 200-455 kHz
-    
-    tows[[j]][[1]] = 15.8 < 10 * log10(integration[[j]][[5]]) &
-      16.3 > 10 * log10(integration[[j]][[5]])
-    
-    # Apply the mask back to the full water column 455 kHz and get rid of 0s and NAs
-    
-    tows[[j]][[2]] = integration[[j]][[7]] * tows[[j]][[1]]
-    tows[[j]][[2]][tows[[j]][[2]] == 0] = NaN
-    tows[[j]][[2]][is.na(tows[[j]][[2]])] = NaN
-  }
-  assign(paste0(paste0("Sept", dates[i], "_Masked")),tows)
-  rm(tows,integration)
-}
-
-# Inverse problem for each tow's Sv values
-
-DFs = sort(grep("Sept[0-9]{2}_Masked",names(.GlobalEnv),value=TRUE))
-echo_masked_biomass = list()
-cfin_TS = c(-129.7,	-122.3,	-108.3,	-99.9)
-
-for(i in 1:length(DFs)) {
-  # for each day
-  masked = get(DFs[i])
-  echo_masked_biomass[[i]] = list()
-  for(j in 1:length(masked)) {
-    # for each tow
-    echo_masked_biomass[[i]][[j]] = list()
-    temp = 10 * log10(masked[[j]][[2]])
-    echo_masked_biomass[[i]][[j]][[1]] = 10^((temp - cfin_TS[3])/10) * 10^-6 * 268.3
-    echo_masked_biomass[[i]][[j]][[2]] = 10^(0.58 + 0.04 * temp)
-  }
-}
-
-# Group by "station" (deep, mid, shallow) and basin (GMB, OB), and put into 5 m depth bins
-# This will probably need to be done manually/by hand
-
-# Station numbers:
-# GMB shallow: 10, 13, 17, seafloor depth 158
-# OB shallow: 5, 20, seafloor depth 110
-
-# GMB mid: 9, 16, seafloor depth 160.5
-# OB mid: 3, 7, 18, seafloor depth 127.3
-
-# GMB deep: 8, 12, 15, seafloor depth 169.3
-# OB deep: 4, 6, 19, seafloor depth 135
-
-echo_masked_biomass2 = data.frame(matrix(0, ncol=17, nrow=40))
-echo_masked_biomass2[,1] = (paste0("[",seq(0,195,5),",",seq(5,200,5),")"))
-names(echo_masked_biomass2)[1] = "Depth_Bin"
-n = 2
-
-for(k in 1:length(echo_masked_biomass)) {
-  for(m in 1:length(echo_masked_biomass[[k]])) {
-    test = as.data.frame(echo_masked_biomass[[k]][[m]][[2]])
-    test = t(test)
-    test[which(is.nan(test))] = NA
-    test = test[, colSums(is.na(test)) < nrow(test)]
-    
-    # x = biomass value, y = depth
-    
-    test2 = data.frame()
-    
-    for (i in 1:nrow(test)) {
-      for (j in 1:ncol(test)) {
-        if (is.na(test[i, j] == TRUE)) {
-          next
-        } else
-          test2 = rbind(test2, c(i + 4, test[i, j]))
-        
-      }
-    }
-    
-    colnames(test2) = c("Depth", "Biomass")
-    
-    # Result: depth and mean biomass from glider dives at each multinet tow, in 5 m
-    # depth bins
-    test3 = test2 %>% 
-      filter(!is_extreme(Biomass)) %>%
-      transform(bin=cut(Depth, seq(0,200,5),right=F)) %>%
-      group_by(bin) %>%
-      reframe(Biomass = mean(Biomass))
-
-    # Store these values in a dataframe
-    for(p in 1:nrow(test3)) {
-      echo_masked_biomass2[which(echo_masked_biomass2$Depth_Bin == test3$bin[p]),n] = test3$Biomass[p]
-    }
-    n = n + 1
-  }
-}
-
-# Extremely messy reframing
-
-names(echo_masked_biomass2)[2:ncol(echo_masked_biomass2)] = c(3, 4,
-                                                              5, 6, 7,
-                                                              8, 9, 10, 
-                                                              12, 13,
-                                                              15, 16, 17,
-                                                              18, 19, 20)
-echo_masked_biomass2$Depth_Bin = factor(echo_masked_biomass2$Depth_Bin, levels = echo_masked_biomass2$Depth_Bin)
-
-GMB_Shallow = cbind(echo_masked_biomass2[,c(1,9,11,14)] %>% 
-  mutate(Echo_Biomass = rowMeans(select(., 2:4), na.rm = TRUE)),
-  OPC_biomass$GMB_Shallow)
-names(GMB_Shallow)[ncol(GMB_Shallow)] = "OPC_Biomass"
-GMB_Mid = cbind(echo_masked_biomass2[,c(1,8,13)] %>%
-  mutate(Echo_Biomass = rowMeans(select(., 2:3), na.rm = TRUE)),
-  OPC_biomass$GMB_Mid)
-names(GMB_Mid)[ncol(GMB_Mid)] = "OPC_Biomass"
-GMB_Deep = cbind(echo_masked_biomass2[,c(1,7,10,12)] %>%
-  mutate(Echo_Biomass = rowMeans(select(., 2:4), na.rm = TRUE)),
-  OPC_biomass$GMB_Deep)
-names(GMB_Deep)[ncol(GMB_Deep)] = "OPC_Biomass"
-
-OB_Shallow = cbind(echo_masked_biomass2[,c(1,4,17)] %>%
-  mutate(Echo_Biomass = rowMeans(select(., 2:3), na.rm = TRUE)),
-  OPC_biomass$OB_Shallow)
-names(OB_Shallow)[ncol(OB_Shallow)] = "OPC_Biomass"
-OB_Mid = cbind(echo_masked_biomass2[,c(1,2,6,15)] %>%
-  mutate(Echo_Biomass = rowMeans(select(., 2:4), na.rm = TRUE)),
-  OPC_biomass$OB_Mid)
-names(OB_Mid)[ncol(OB_Mid)] = "OPC_Biomass"
-OB_Deep = cbind(echo_masked_biomass2[,c(1,3,5,16)] %>%
-  mutate(Echo_Biomass = rowMeans(select(., 2:4), na.rm = TRUE)),
-  OPC_biomass$OB_Deep)
-names(OB_Deep)[ncol(OB_Deep)] = "OPC_Biomass"
-
-# Finally, the bar plots
-
-GMB_Shallow_Plot = ggplot(data=GMB_Shallow, aes(x = Depth_Bin)) +
-  geom_col(aes(y=Echo_Biomass,fill="Echosounder")) +
-  geom_line(aes(y=rollmean(Echo_Biomass,5,na.pad=T,align="center"),group=NA)) +
-  geom_segment(aes(x=Depth_Bin[which.max(rollmean(Echo_Biomass,5,na.pad=T,align="center"))],
-                   xend=Depth_Bin[which.max(rollmean(Echo_Biomass,5,na.pad=T,align="center"))],
-                   y=0,yend=0.025),
-               linetype = "dashed") +
-  geom_col(aes(y=-OPC_Biomass,fill="OPC")) +
-  geom_line(aes(y=-rollmean(OPC_Biomass,5,na.pad=T,align="center"),group=NA)) +
-  geom_segment(aes(x=Depth_Bin[which.max(rollmean(OPC_Biomass,5,na.pad=T,align="center"))],
-                   xend=Depth_Bin[which.max(rollmean(OPC_Biomass,5,na.pad=T,align="center"))],
-                   y=0,yend=-0.025),
-               linetype = "dashed") +
-  geom_vline(aes(xintercept=Depth_Bin[32]),show.legend = F,color="red") +
-  annotate("text", x=GMB_Shallow$Depth_Bin[30],y=0.075,label="Mean seafloor depth",color="red") +
-  scale_x_discrete(limits = rev) +
-  scale_y_continuous(labels=abs,limits=c(-0.025,0.025)) +
-  scale_fill_viridis_d(begin=0,end=0.7) +
-  theme_bw() +
-  coord_flip(expand=F) +
-  labs(y = "Mean Biomass (g/m^3)", x="Depth Bin", fill="Instrument")
-fname = paste0(figure_dir,"GMB_Shallow_Echo_OPC_Comparsion_Plot.png")
-ggsave(plot=GMB_Shallow_Plot,file=fname,scale=2)
-
-GMB_Mid_Plot = ggplot(data=GMB_Mid, aes(x = Depth_Bin)) +
-  geom_col(aes(y=Echo_Biomass,fill="Echosounder")) +
-  geom_line(aes(y=rollmean(Echo_Biomass,5,na.pad=T,align="center"),group=NA)) +
-  geom_segment(aes(x=Depth_Bin[which.max(rollmean(Echo_Biomass,5,na.pad=T,align="center"))],
-                   xend=Depth_Bin[which.max(rollmean(Echo_Biomass,5,na.pad=T,align="center"))],
-                   y=0,yend=0.025),
-               linetype = "dashed") +
-  geom_col(aes(y=-OPC_Biomass,fill="OPC")) +
-  geom_line(aes(y=-rollmean(OPC_Biomass,5,na.pad=T,align="center"),group=NA)) +
-  geom_segment(aes(x=Depth_Bin[which.max(rollmean(OPC_Biomass,5,na.pad=T,align="center"))],
-                   xend=Depth_Bin[which.max(rollmean(OPC_Biomass,5,na.pad=T,align="center"))],
-                   y=0,yend=-0.025),
-               linetype = "dashed") +
-  geom_vline(aes(xintercept=Depth_Bin[33]),show.legend = F,color="red") +
-  annotate("text", x=GMB_Mid$Depth_Bin[31],y=0.075,label="Mean seafloor depth",color="red") +
-  scale_x_discrete(limits = rev) +
-  scale_y_continuous(labels=abs,limits=c(-0.025,0.025)) +
-  scale_fill_viridis_d(begin=0,end=0.7) +
-  theme_bw() +
-  coord_flip(expand=F) +
-  labs(y = "Mean Biomass (g/m^3)", x="Depth Bin", fill="Instrument")
-fname = paste0(figure_dir,"GMB_Mid_Echo_OPC_Comparsion_Plot.png")
-ggsave(plot=GMB_Mid_Plot,file=fname,scale=2)
-
-GMB_Deep_Plot = ggplot(data=GMB_Deep, aes(x = Depth_Bin)) +
-  geom_col(aes(y=Echo_Biomass,fill="Echosounder")) +
-  geom_line(aes(y=rollmean(Echo_Biomass,5,na.pad=T,align="center"),group=NA)) +
-  geom_segment(aes(x=Depth_Bin[which.max(rollmean(Echo_Biomass,5,na.pad=T,align="center"))],
-                   xend=Depth_Bin[which.max(rollmean(Echo_Biomass,5,na.pad=T,align="center"))],
-                   y=0,yend=0.025),
-               linetype = "dashed") +
-  geom_col(aes(y=-OPC_Biomass,fill="OPC")) +
-  geom_vline(aes(xintercept=Depth_Bin[34]),show.legend = F,color="red") +
-  annotate("text", x=GMB_Deep$Depth_Bin[32],y=0.075,label="Mean seafloor depth",color="red") +
-  geom_line(aes(y=-rollmean(OPC_Biomass,5,na.pad=T,align="center"),group=NA)) +
-  geom_segment(aes(x=Depth_Bin[which.max(rollmean(OPC_Biomass,5,na.pad=T,align="center"))],
-                   xend=Depth_Bin[which.max(rollmean(OPC_Biomass,5,na.pad=T,align="center"))],
-                   y=0,yend=-0.025),
-               linetype = "dashed") +
-  scale_x_discrete(limits = rev) +
-  scale_y_continuous(labels=abs,limits=c(-0.025,0.025)) +
-  scale_fill_viridis_d(begin=0,end=0.7) +
-  theme_bw() +
-  coord_flip(expand=F) +
-  labs(y = "Mean Biomass (g/m^3)", x="Depth Bin", fill="Instrument")
-fname = paste0(figure_dir,"GMB_Deep_Echo_OPC_Comparsion_Plot.png")
-ggsave(plot=GMB_Deep_Plot,file=fname,scale=2)
-
-
-OB_Shallow_Plot = ggplot(data=OB_Shallow, aes(x = Depth_Bin)) +
-  geom_col(aes(y=Echo_Biomass,fill="Echosounder")) +
-  geom_line(aes(y=rollmean(Echo_Biomass,5,na.pad=T,align="center"),group=NA)) +
-  geom_segment(aes(x=Depth_Bin[which.max(rollmean(Echo_Biomass,5,na.pad=T,align="center"))],
-                   xend=Depth_Bin[which.max(rollmean(Echo_Biomass,5,na.pad=T,align="center"))],
-                   y=0,yend=0.025),
-               linetype = "dashed") +
-  geom_col(aes(y=-OPC_Biomass,fill="OPC")) +
-  geom_line(aes(y=-rollmean(OPC_Biomass,5,na.pad=T,align="center"),group=NA)) +
-  geom_segment(aes(x=Depth_Bin[which.max(rollmean(OPC_Biomass,5,na.pad=T,align="center"))],
-                   xend=Depth_Bin[which.max(rollmean(OPC_Biomass,5,na.pad=T,align="center"))],
-                   y=0,yend=-0.025),
-               linetype = "dashed") +
-  geom_vline(aes(xintercept=Depth_Bin[23]),show.legend = F,color="red") +
-  annotate("text", x=OB_Shallow$Depth_Bin[21],y=0.075,label="Mean seafloor depth",color="red") +
-  scale_x_discrete(limits = rev) +
-  scale_y_continuous(labels=abs,limits=c(-0.025,0.025)) +
-  scale_fill_viridis_d(begin=0,end=0.7) +
-  theme_bw() +
-  coord_flip(expand=F) +
-  labs(y = "Mean Biomass (g/m^3)", x="Depth Bin", fill="Instrument")
-fname = paste0(figure_dir,"OB_Shallow_Echo_OPC_Comparsion_Plot.png")
-ggsave(plot=OB_Shallow_Plot,file=fname,scale=2)
-
-OB_Mid_Plot = ggplot(data=OB_Mid, aes(x = Depth_Bin)) +
-  geom_col(aes(y=Echo_Biomass,fill="Echosounder")) +
-  geom_line(aes(y=rollmean(Echo_Biomass,5,na.pad=T,align="center"),group=NA)) +
-  geom_segment(aes(x=Depth_Bin[which.max(rollmean(Echo_Biomass,5,na.pad=T,align="center"))],
-                   xend=Depth_Bin[which.max(rollmean(Echo_Biomass,5,na.pad=T,align="center"))],
-                   y=0,yend=0.025),
-               linetype = "dashed") +
-  geom_col(aes(y=-OPC_Biomass,fill="OPC")) +
-  geom_line(aes(y=-rollmean(OPC_Biomass,5,na.pad=T,align="center"),group=NA)) +
-  geom_segment(aes(x=Depth_Bin[which.max(rollmean(OPC_Biomass,5,na.pad=T,align="center"))],
-                   xend=Depth_Bin[which.max(rollmean(OPC_Biomass,5,na.pad=T,align="center"))],
-                   y=0,yend=-0.025),
-               linetype = "dashed") +
-  geom_vline(aes(xintercept=Depth_Bin[26]),show.legend = F,color="red") +
-  annotate("text", x=OB_Mid$Depth_Bin[24],y=0.075,label="Mean seafloor depth",color="red") +
-  scale_x_discrete(limits = rev) +
-  scale_y_continuous(labels=abs,limits=c(-0.025,0.025)) +
-  scale_fill_viridis_d(begin=0,end=0.7) +
-  theme_bw() +
-  coord_flip(expand=F) +
-  labs(y = "Mean Biomass (g/m^3)", x="Depth Bin", fill="Instrument")
-fname = paste0(figure_dir,"OB_Mid_Echo_OPC_Comparsion_Plot.png")
-ggsave(plot=OB_Mid_Plot,file=fname,scale=2)
-
-OB_Deep_Plot = ggplot(data=OB_Deep, aes(x = Depth_Bin)) +
-  geom_col(aes(y=Echo_Biomass,fill="Echosounder")) +
-  geom_line(aes(y=rollmean(Echo_Biomass,5,na.pad=T,align="center"),group=NA)) +
-  geom_segment(aes(x=Depth_Bin[which.max(rollmean(Echo_Biomass,5,na.pad=T,align="center"))],
-                   xend=Depth_Bin[which.max(rollmean(Echo_Biomass,5,na.pad=T,align="center"))],
-                   y=0,yend=0.025),
-               linetype = "dashed") +
-  geom_col(aes(y=-OPC_Biomass,fill="OPC")) +
-  geom_line(aes(y=-rollmean(OPC_Biomass,5,na.pad=T,align="center"),group=NA)) +
-  geom_segment(aes(x=Depth_Bin[which.max(rollmean(OPC_Biomass,5,na.pad=T,align="center"))],
-                   xend=Depth_Bin[which.max(rollmean(OPC_Biomass,5,na.pad=T,align="center"))],
-                   y=0,yend=-0.025),
-               linetype = "dashed") +
-  geom_vline(aes(xintercept=Depth_Bin[28]),show.legend = F,color="red") +
-  annotate("text", x=OB_Deep$Depth_Bin[26],y=0.075,label="Mean seafloor depth",color="red") +
-  scale_x_discrete(limits = rev) +
-  scale_y_continuous(labels=abs,limits=c(-0.025,0.025)) +
-  scale_fill_viridis_d(begin=0,end=0.7) +
-  theme_bw() +
-  coord_flip(expand=F) +
-  labs(y = "Mean Biomass (g/m^3)", x="Depth Bin", fill="Instrument")
-fname = paste0(figure_dir,"OB_Deep_Echo_OPC_Comparsion_Plot.png")
-ggsave(plot=OB_Deep_Plot,file=fname,scale=2)
-  
-#####
-
-## Multinet comparison bar plots
-
-# Vertical bar graph
-# Total biomass vs c.fin 4/5/6F biomass
-# Note: need to use the wet biomass (from Natasha's measurements)
-# instead of my calculated dry biomass??
-
-# Station numbers:
-# GMB shallow: 10, 13, 17
-# OB shallow: 5, 20
-
-# GMB mid: 9, 16
-# OB mid: 3, 7, 18
-
-# GMB deep: 8, 12, 15
-# OB deep: 4, 6, 19
-
-# small_copepods = c("Acartia hudsonica", "Acartia longiremis", "Acartia sp.", "Acartia tonsa",
-#                    "Centropages hamatus", "Centropages typicus",
-#                    "Metridia longa", "Metridia lucens", "Metridia sp.",
-#                    "Microcalanus spp.",
-#                    "Microsetella norvegica",
-#                    "Oithona atlantica", "Oithona similis",
-#                    "Paracalanus spp.",
-#                    "Pseudocalanus spp.",
-#                    "Temora longicornis")
-# 
-# Net_Data$taxa[Net_Data$taxa %in% small_copepods] = "Small copepod"
-
-GMB_Shallow_Cfin = stages[stages$station %in% c(10, 13, 17),] %>% 
-  filter(stage %in% c("CIV","CV","CVIF")) %>%
-  group_by(net, stage) %>%
-  reframe(cfin_biomass = mean(biomass,na.rm=T), cfin_concentration = mean(concentration,na.rm=T))
-
-# also compare small copepod and late-stage c. fin biomass
-# Net_Data[(Net_Data$station %in% c(10, 13, 17) & Net_Data$taxa == "Small copepod"),] %>%
-#   group_by(net) %>%
-#   reframe(small_copepod_biomass = mean(biomass,na.rm=T))
-
-GMB_Shallow_Net = Net_Data[Net_Data$station %in% c(10, 13, 17),] %>%
-  group_by(net, station) %>%
-  reframe(biomass = sum(biomass,na.rm=T), concentration = sum(concentration, na.rm=T)) %>% ungroup() %>%
-  group_by(net) %>%
-  reframe(total_biomass = mean(biomass,na.rm=T), total_concentration = mean(concentration,na.rm=T))
-
-GMB_Shallow_Net_Plot = ggplot() +
-  geom_col(data=GMB_Shallow_Cfin, aes(x=cfin_biomass, y=net, group=stage, fill=stage)) +
-  geom_col(data=GMB_Shallow_Net, aes(x=-total_biomass, y=net, fill="Total Biomass")) +
-  theme_bw() +
-  scale_x_continuous(labels = abs,limits=c(-.13, .13)) +
-  scale_fill_manual(values=(oceColorsViridis(4))) +
-  labs(x="Mean Biomass (g/m^3)", y="Net",fill="Biomass Type")
-fname = paste0(figure_dir,"GMB_Shallow_Net_Comparsion_Plot.png")
-ggsave(plot=GMB_Shallow_Plot,file=fname,scale=2)
-
-
-GMB_Mid_Cfin = stages[stages$station %in% c(9, 16),] %>% 
-  group_by(net, stage) %>%
-  filter(stage %in% c("CIV","CV","CVIF")) %>%
-  reframe(cfin_biomass = mean(biomass,na.rm=T), cfin_concentration = mean(concentration,na.rm=T))
-
-GMB_Mid_Net = Net_Data[Net_Data$station %in% c(9, 16),] %>%
-  group_by(net, station) %>%
-  reframe(biomass = sum(biomass,na.rm=T), concentration = sum(concentration, na.rm=T)) %>% ungroup() %>%
-  group_by(net) %>%
-  reframe(total_biomass = mean(biomass,na.rm=T), total_concentration = mean(concentration,na.rm=T))
-
-GMB_Mid_Net_Plot = ggplot() +
-  geom_col(data=GMB_Mid_Cfin, aes(x=cfin_biomass, y=net, group=stage, fill=stage)) +
-  geom_col(data=GMB_Mid_Net, aes(x=-total_biomass, y=net, fill="Total Biomass")) +
-  theme_bw() +
-  scale_x_continuous(labels = abs,limits=c(-.13, .13)) +
-  scale_fill_manual(values=(oceColorsViridis(4))) +
-  labs(x="Mean Biomass (g/m^3)", y="Net", fill="Biomass Type")
-fname = paste0(figure_dir,"GMB_Mid_Net_Comparsion_Plot.png")
-ggsave(plot=GMB_Mid_Plot,file=fname,scale=2)
-
-
-GMB_Deep_Cfin = stages[stages$station %in% c(8, 12, 15),] %>% 
-  group_by(net, stage) %>%
-  filter(stage %in% c("CIV","CV","CVIF")) %>%
-  reframe(cfin_biomass = mean(biomass,na.rm=T), cfin_concentration = mean(concentration,na.rm=T))
-
-GMB_Deep_Net = Net_Data[Net_Data$station %in% c(8, 12, 15),] %>%
-  group_by(net, station) %>%
-  reframe(biomass = sum(biomass,na.rm=T), concentration = sum(concentration, na.rm=T)) %>% ungroup() %>%
-  group_by(net) %>%
-  reframe(total_biomass = mean(biomass,na.rm=T), total_concentration = mean(concentration,na.rm=T))
-
-GMB_Deep_Net_Plot = ggplot() +
-  geom_col(data=GMB_Deep_Cfin, aes(x=cfin_biomass, y=net, group=stage, fill=stage)) +
-  geom_col(data=GMB_Deep_Net, aes(x=-total_biomass, y=net, fill="Total Biomass")) +
-  theme_bw() +
-  scale_x_continuous(labels = abs, limits=c(-.13, .13)) +
-  scale_fill_manual(values=(oceColorsViridis(4))) +
-  labs(x="Mean Biomass (g/m^3)", y="Net", fill="Biomass Type")
-fname = paste0(figure_dir,"GMB_Deep_Net_Comparsion_Plot.png")
-ggsave(plot=GMB_Deep_Plot,file=fname,scale=2)
-
-
-OB_Shallow_Cfin = stages[stages$station %in% c(5, 20),] %>% 
-  group_by(net, stage) %>%
-  filter(stage %in% c("CIV","CV","CVIF")) %>%
-  reframe(cfin_biomass = mean(biomass,na.rm=T), cfin_concentration = mean(concentration,na.rm=T))
-
-OB_Shallow_Net = Net_Data[Net_Data$station %in% c(15, 20),] %>%
-  group_by(net, station) %>%
-  reframe(biomass = sum(biomass,na.rm=T), concentration = sum(concentration, na.rm=T)) %>% ungroup() %>%
-  group_by(net) %>%
-  reframe(total_biomass = mean(biomass,na.rm=T), total_concentration = mean(concentration,na.rm=T))
-
-OB_Shallow_Net_Plot = ggplot() +
-  geom_col(data=OB_Shallow_Cfin, aes(x=cfin_biomass, y=net, group=stage, fill=stage)) +
-  geom_col(data=OB_Shallow_Net, aes(x=-total_biomass, y=net, fill="Total Biomass")) +
-  theme_bw() +
-  scale_x_continuous(labels = abs, limits=c(-.13, .13)) +
-  scale_fill_manual(values=(oceColorsViridis(4))) +
-  labs(x="Mean Biomass (g/m^3)", y="Net", fill="Biomass Type")
-fname = paste0(figure_dir,"OB_Shallow_Net_Comparsion_Plot.png")
-ggsave(plot=OB_Shallow_Plot,file=fname,scale=2)
-
-
-OB_Mid_Cfin = stages[stages$station %in% c(3, 7, 18),] %>% 
-  group_by(net, stage) %>%
-  filter(stage %in% c("CIV","CV","CVIF")) %>%
-  reframe(cfin_biomass = mean(biomass,na.rm=T), cfin_concentration = mean(concentration,na.rm=T))
-
-OB_Mid_Net = Net_Data[Net_Data$station %in% c(3, 7, 18),] %>%
-  group_by(net, station) %>%
-  reframe(biomass = sum(biomass,na.rm=T), concentration = sum(concentration, na.rm=T)) %>% ungroup() %>%
-  group_by(net) %>%
-  reframe(total_biomass = mean(biomass,na.rm=T), total_concentration = mean(concentration,na.rm=T))
-
-OB_Mid_Net_Plot = ggplot() +
-  geom_col(data=OB_Mid_Cfin, aes(x=cfin_biomass, y=net, group=stage, fill=stage)) +
-  geom_col(data=OB_Mid_Net, aes(x=-total_biomass, y=net, fill="Total Biomass")) +
-  theme_bw() +
-  scale_x_continuous(labels = abs,limits=c(-.13, .13)) +
-  scale_fill_manual(values=(oceColorsViridis(4))) +
-  labs(x="Mean Biomass (g/m^3)", y="Net", fill="Biomass Type")
-fname = paste0(figure_dir,"OB_Mid_Net_Comparsion_Plot.png")
-ggsave(plot=OB_Mid_Plot,file=fname,scale=2)
-
-
-OB_Deep_Cfin = stages[stages$station %in% c(4, 6, 19),] %>% 
-  group_by(net, stage) %>%
-  filter(stage %in% c("CIV","CV","CVIF")) %>%
-  reframe(cfin_biomass = mean(biomass,na.rm=T), cfin_concentration = mean(concentration,na.rm=T))
-
-OB_Deep_Net = Net_Data[Net_Data$station %in% c(4, 6, 19),] %>%
-  group_by(net, station) %>%
-  reframe(biomass = sum(biomass,na.rm=T), concentration = sum(concentration, na.rm=T)) %>% ungroup() %>%
-  group_by(net) %>%
-  reframe(total_biomass = mean(biomass,na.rm=T), total_concentration = mean(concentration,na.rm=T))
-
-OB_Deep_Net_Plot = ggplot() +
-  geom_col(data=OB_Deep_Cfin, aes(x=cfin_biomass, y=net, group=stage, fill=stage)) +
-  geom_col(data=OB_Deep_Net, aes(x=-total_biomass, y=net, fill="Total Biomass")) +
-  theme_bw() +
-  scale_x_continuous(labels = abs,limits=c(-.13, .13)) +
-  scale_fill_manual(values=(oceColorsViridis(4))) +
-  labs(x="Mean Biomass (g/m^3)", y="Net", fill="Biomass Type")
-fname = paste0(figure_dir,"OB_Deep_Net_Comparsion_Plot.png")
-ggsave(plot=OB_Deep_Plot,file=fname,scale=2)
-
-ggarrange(GMB_Shallow_Plot,GMB_Shallow_Net_Plot,
-          ncol=2)
-fname=paste0(figure_dir,"GMB_Shallow_Full_Comparison_Plot.png")
-ggsave(file=fname,scale=2)
-
-ggarrange(GMB_Mid_Plot,GMB_Mid_Net_Plot,
-          ncol=2)
-fname=paste0(figure_dir,"GMB_Mid_Full_Comparison_Plot.png")
-ggsave(file=fname,scale=2)
-
-ggarrange(GMB_Deep_Plot,GMB_Deep_Net_Plot,
-          ncol=2)
-fname=paste0(figure_dir,"GMB_Deep_Full_Comparison_Plot.png")
-ggsave(file=fname,scale=2)
-
-ggarrange(OB_Shallow_Plot,OB_Shallow_Net_Plot,
-          ncol=2)
-fname=paste0(figure_dir,"OB_Shallow_Full_Comparison_Plot.png")
-ggsave(file=fname,scale=2)
-
-ggarrange(OB_Mid_Plot,OB_Mid_Net_Plot,
-          ncol=2)
-fname=paste0(figure_dir,"OB_Mid_Full_Comparison_Plot.png")
-ggsave(file=fname,scale=2)
-
-ggarrange(OB_Deep_Plot,OB_Deep_Net_Plot,
-          ncol=2)
-fname=paste0(figure_dir,"OB_Deep_Full_Comparison_Plot.png")
-ggsave(file=fname,scale=2)
-
-#####
-
-## MultiNet Wet Biomass plots
-
-Net_Data_Wet = read_excel(paste0(data_dir,'Multinet/2022-01-12_BoF2020_Zooplankton_Data.xlsx'),sheet=2) %>%
-  filter(site %in% c("OB","GMB"))
-
-Net_Data_Wet$volume = NA
-Net_Data_Wet$station = NA
-
-for (j in 1:nrow(Net_Metadata)) {
-  Net_Data_Wet$volume[which(as.character(Net_Data_Wet$sample_id) ==
-                              as.character(Net_Metadata$Sample_ID[j]))] =
-    Net_Metadata$`Volume_(m3)`[j]
-  
-  Net_Data_Wet$station[which(as.character(Net_Data_Wet$sample_id) ==
-                               as.character(Net_Metadata$Sample_ID[j]))] =
-    Net_Metadata$Station_Number[j]
-}
-
-Net_Data_Wet = Net_Data_Wet[!(Net_Data_Wet$split %in% grep("OR",Net_Data_Wet$split,value=TRUE)),]
-Net_Data_Wet = Net_Data_Wet[!(Net_Data_Wet$split %in% grep("n/a",Net_Data_Wet$split,value=TRUE)),]
-Net_Data_Wet = Net_Data_Wet[!(Net_Data_Wet$split %in% grep(" [+] ",Net_Data_Wet$split,value=TRUE)),]
-Net_Data_Wet = Net_Data_Wet[!(Net_Data_Wet$tow == 10),]
-Net_Data_Wet$`Weight (g)` = as.numeric(Net_Data_Wet$`Weight (g)`)
-
-Net_Data_Wet$split = sapply(Net_Data_Wet$split, function(x) eval(parse(text = x)))
-
-Net_Data_Wet$wet_biomass = Net_Data_Wet$`Weight (g)` / Net_Data_Wet$split / Net_Data_Wet$volume
-Net_Data_Wet$net = as.factor(Net_Data_Wet$net)
-
-
-OB_Shallow_Wet = Net_Data_Wet[Net_Data_Wet$station %in% c(15, 20),] %>%
-  group_by(net, station) %>%
-  reframe(wet_biomass = sum(wet_biomass,na.rm=T)) %>% ungroup() %>%
-  group_by(net) %>%
-  reframe(total_biomass = mean(wet_biomass,na.rm=T))
-
-ggplot(data=OB_Shallow_Wet) +
-  geom_col(aes(x=total_biomass,y=net)) +
-  scale_x_continuous(limits=c(0,0.6)) +
-  labs(y="Net",x="Wet Biomass (g/m^3)")
-ggsave(filename=paste0(figure_dir,'OB_Shallow_Wet_Biomass.png'),scale=2)
-
-
-#####
-
-## OPC concentrations
-
-GMB_Shallow_Abundance = OPC_Data_Full[OPC_Data_Full$OPC_cast_num %in% c(17,
-                                                              23,
-                                                              31, 32),] %>%
-  filter(depth>1) %>%
-  filter(flag != 'depth') %>%
-  group_by(OPC_cast_num, basin) %>%
-  reframe(
-    opc_abundance(across(), dz = dz, min_size = min_size, max_size = max_size, good_only = F,
-                reject_volume = F)) %>%
-  reframe(depth = depth, concentration = concentration) %>%
-  group_by(depth) %>%
-  reframe(concentration = mean(concentration))
-
-GMB_Mid_Abundance = OPC_Data_Full[OPC_Data_Full$OPC_cast_num %in% c(15, 16,
-                                                          29,30),] %>%
-  filter(depth>1) %>%
-  filter(flag != 'depth') %>%
-  group_by(OPC_cast_num, basin) %>%
-  reframe(
-    opc_abundance(across(), dz = dz, min_size = min_size, max_size = max_size, good_only = F,
-                reject_volume = F)) %>%
-  reframe(depth = depth, concentration = concentration) %>%
-  group_by(depth) %>%
-  reframe(concentration = mean(concentration))
-
-GMB_Deep_Abundance = OPC_Data_Full[OPC_Data_Full$OPC_cast_num %in% c(13, 14,
-                                                           21, 22,
-                                                           27, 28),] %>%
-  filter(depth>1) %>%
-  filter(flag != 'depth') %>%
-  group_by(OPC_cast_num, basin) %>%
-  reframe(
-    opc_abundance(across(), dz = dz, min_size = min_size, max_size = max_size, good_only = F,
-                reject_volume = F)) %>%
-  reframe(depth = depth, concentration = concentration) %>%
-  group_by(depth) %>%
-  reframe(concentration = mean(concentration))
-
-OB_Shallow_Abundance = OPC_Data_Full[OPC_Data_Full$OPC_cast_num %in% c(7, 8),] %>%
-  filter(depth>1) %>%
-  filter(flag != 'depth') %>%
-  group_by(OPC_cast_num, basin) %>%
-  reframe(
-    opc_abundance(across(), dz = dz, min_size = min_size, max_size = max_size, good_only = F,
-                reject_volume = F)) %>%
-  reframe(depth = depth, concentration = concentration) %>%
-  group_by(depth) %>%
-  reframe(concentration = mean(concentration))
-
-OB_Mid_Abundance = OPC_Data_Full[OPC_Data_Full$OPC_cast_num %in% c(33),] %>%
-  filter(depth>1) %>%
-  filter(flag != 'depth') %>%
-  group_by(OPC_cast_num, basin) %>%
-  reframe(
-    opc_abundance(across(), dz = dz, min_size = min_size, max_size = max_size, good_only = F,
-                reject_volume = F)) %>%
-  reframe(depth = depth, concentration = concentration) %>%
-  group_by(depth) %>%
-  reframe(concentration = mean(concentration))
-
-OB_Deep_Abundance = OPC_Data_Full[OPC_Data_Full$OPC_cast_num %in% c(5,
-                                                          35, 36),] %>%
-  filter(depth>1) %>%
-  filter(flag != 'depth') %>%
-  group_by(OPC_cast_num, basin) %>%
-  reframe(
-    opc_abundance(across(), dz = dz, min_size = min_size, max_size = max_size, good_only = F,
-                reject_volume = F)) %>%
-  reframe(depth = depth, concentration = concentration) %>%
-  group_by(depth) %>%
-  reframe(concentration = mean(concentration))
-
-
-# Fill in missing depth bins
-DFs = sort(grep("_Abundance$|_Abundance$",names(.GlobalEnv),value=TRUE))
-
-OPC_concentration = data.frame(matrix(0, ncol=7, nrow=40))
-OPC_concentration[,1] = (paste0(seq(0,195,5)))
-names(OPC_concentration)[1] = "Depth_Bin"
-n = 2
-
-for(i in 1:length(DFs)) {
-  test = get(DFs[i])
-  for(j in 1:nrow(test)) {
-    OPC_concentration[which(OPC_concentration$Depth_Bin == test$depth[j]),n] = test$concentration[j]
-  }
-  names(OPC_concentration)[n] = DFs[i]
-  n = n+1
-}
-
-#####
-
-## Net concentration vs OPC concentration a la Baum 2003
-
-# Station numbers:
-# GMB shallow: 10, 13, 17, seafloor depth 158
-# OB shallow: 5, 20, seafloor depth 110
-
-# GMB mid: 9, 16, seafloor depth 160.5
-# OB mid: 3, 7, 18, seafloor depth 127.3
-
-# GMB deep: 8, 12, 15, seafloor depth 169.3
-# OB deep: 4, 6, 19, seafloor depth 135
-
-require(plyr)
-GMB_Shallow_Cfin$Intervals = Net_Metadata[Net_Metadata$Station_Number %in% c(10, 13, 17),] %>% 
-  group_by(Net_Num) %>%
-  reframe(depth = rep(round_any(mean(`Pressure_(dbar)`), 5, f = ceiling), each = 3)) %>% slice(c(1:15))
-detach("package:plyr", unload=TRUE)
-
-GMB_Shallow_Cfin = GMB_Shallow_Cfin %>% group_by(Intervals$depth) %>% reframe (cfin_concentration = sum(cfin_concentration))
-
-OPC_concentration$GMB_Shallow_Net_Abundance = 0
-
-for(i in 1:nrow(GMB_Shallow_Cfin)) {
-  if(i == 1) {
-    OPC_concentration$GMB_Shallow_Net_Abundance[as.numeric(OPC_concentration$Depth_Bin) <= 
-                                                   GMB_Shallow_Cfin$`Intervals$depth`[i]] = GMB_Shallow_Cfin$cfin_concentration[i]
-  } else {
-  OPC_concentration$GMB_Shallow_Net_Abundance[(as.numeric(OPC_concentration$Depth_Bin) <= 
-                                                GMB_Shallow_Cfin$`Intervals$depth`[i] &
-                                                 as.numeric(OPC_concentration$Depth_Bin) >=
-                                                 GMB_Shallow_Cfin$`Intervals$depth`[i-1])] = GMB_Shallow_Cfin$cfin_concentration[i]
-  }
-}
-
-GMB_Shallow_Abundance_Plot =ggplot(data=OPC_concentration, aes(x = factor(Depth_Bin, levels = Depth_Bin))) +
-  geom_col(aes(y=GMB_Shallow_Abundance)) +
-  geom_step(aes(y = GMB_Shallow_Net_Abundance, group=NA),linewidth=1,direction="mid") +
-  scale_x_discrete(limits = rev) +
-  theme_bw() +
-  coord_flip() +
-  labs(y="Abundance (individuals/m^3)", x = "Depth (m)")
-ggsave(file = paste0(figure_dir, "GMB_Shallow_Abundance_Comparison.png"), scale=2)
-
-require(plyr)
-GMB_Mid_Cfin$Intervals = Net_Metadata[Net_Metadata$Station_Number %in% c(9, 16),] %>% 
-  group_by(Net_Num) %>%
-  reframe(depth = rep(round_any(mean(`Pressure_(dbar)`), 5, f = ceiling), each = 3)) %>% slice(c(1:15))
-detach("package:plyr", unload=TRUE)
-
-GMB_Mid_Cfin = GMB_Mid_Cfin %>% group_by(Intervals$depth) %>% reframe (cfin_concentration = sum(cfin_concentration))
-
-OPC_concentration$GMB_Mid_Net_Abundance = 0
-
-for(i in 1:nrow(GMB_Mid_Cfin)) {
-  if(i == 1) {
-    OPC_concentration$GMB_Mid_Net_Abundance[as.numeric(OPC_concentration$Depth_Bin) <= 
-                                                  GMB_Mid_Cfin$`Intervals$depth`[i]] = GMB_Mid_Cfin$cfin_concentration[i]
-  } else {
-    OPC_concentration$GMB_Mid_Net_Abundance[(as.numeric(OPC_concentration$Depth_Bin) <= 
-                                                   GMB_Mid_Cfin$`Intervals$depth`[i] &
-                                                   as.numeric(OPC_concentration$Depth_Bin) >=
-                                                   GMB_Mid_Cfin$`Intervals$depth`[i-1])] = GMB_Mid_Cfin$cfin_concentration[i]
-  }
-}
-
-GMB_Mid_Abundance_Plot =ggplot(data=OPC_concentration, aes(x = factor(Depth_Bin, levels = Depth_Bin))) +
-  geom_col(aes(y=GMB_Mid_Abundance)) +
-  geom_step(aes(y = GMB_Mid_Net_Abundance, group=NA),linewidth=1,direction="mid") +
-  scale_x_discrete(limits = rev) +
-  theme_bw() +
-  coord_flip() +
-  labs(y="Abundance (individuals/m^3)", x = "Depth (m)")
-ggsave(file = paste0(figure_dir, "GMB_Mid_Abundance_Comparison.png"), scale=2)
-
-require(plyr)
-GMB_Deep_Cfin$Intervals = Net_Metadata[Net_Metadata$Station_Number %in% c(8, 12, 15),] %>% 
-  group_by(Net_Num) %>%
-  reframe(depth = rep(round_any(mean(`Pressure_(dbar)`), 5, f = ceiling), each = 3)) %>% slice(c(1:15))
-detach("package:plyr", unload=TRUE)
-
-GMB_Deep_Cfin = GMB_Deep_Cfin %>% group_by(Intervals$depth) %>% reframe (cfin_concentration = sum(cfin_concentration))
-
-OPC_concentration$GMB_Deep_Net_Abundance = 0
-
-for(i in 1:nrow(GMB_Deep_Cfin)) {
-  if(i == 1) {
-    OPC_concentration$GMB_Deep_Net_Abundance[as.numeric(OPC_concentration$Depth_Bin) <= 
-                                                  GMB_Deep_Cfin$`Intervals$depth`[i]] = GMB_Deep_Cfin$cfin_concentration[i]
-  } else {
-    OPC_concentration$GMB_Deep_Net_Abundance[(as.numeric(OPC_concentration$Depth_Bin) <= 
-                                                   GMB_Deep_Cfin$`Intervals$depth`[i] &
-                                                   as.numeric(OPC_concentration$Depth_Bin) >=
-                                                   GMB_Deep_Cfin$`Intervals$depth`[i-1])] = GMB_Deep_Cfin$cfin_concentration[i]
-  }
-}
-
-GMB_Deep_Abundance_Plot =ggplot(data=OPC_concentration, aes(x = factor(Depth_Bin, levels = Depth_Bin))) +
-  geom_col(aes(y=GMB_Deep_Abundance)) +
-  geom_step(aes(y = GMB_Deep_Net_Abundance, group=NA),linewidth=1,direction="mid") +
-  scale_x_discrete(limits = rev) +
-  theme_bw() +
-  coord_flip() +
-  labs(y="Abundance (individuals/m^3)", x = "Depth (m)")
-ggsave(file = paste0(figure_dir, "GMB_Deep_Abundance_Comparison.png"), scale=2)
-
-
-OB_Shallow_Cfin = rbind(OB_Shallow_Cfin, data.frame(net=c(4, 4, 4),
-                                                    stage=c("CIV","CV","CVIF"),
-                                                    cfin_biomass=c(0,0,0),
-                                                    cfin_concentration=c(0,0,0)))
-OB_Shallow_Cfin = OB_Shallow_Cfin[order(OB_Shallow_Cfin$net),]
-require(plyr)
-OB_Shallow_Cfin$Intervals = Net_Metadata[Net_Metadata$Station_Number %in% c(5, 20),] %>% 
-  group_by(Net_Num) %>%
-  reframe(depth = rep(round_any(mean(`Pressure_(dbar)`), 5, f = ceiling), each = 3)) %>% slice(c(1:15))
-detach("package:plyr", unload=TRUE)
-
-OB_Shallow_Cfin = OB_Shallow_Cfin %>% group_by(Intervals$depth) %>% reframe (cfin_concentration = sum(cfin_concentration))
-
-OPC_concentration$OB_Shallow_Net_Abundance = 0
-
-for(i in 1:nrow(OB_Shallow_Cfin)) {
-  if(i == 1) {
-    OPC_concentration$OB_Shallow_Net_Abundance[as.numeric(OPC_concentration$Depth_Bin) <= 
-                                                  OB_Shallow_Cfin$`Intervals$depth`[i]] = OB_Shallow_Cfin$cfin_concentration[i]
-  } else {
-    OPC_concentration$OB_Shallow_Net_Abundance[(as.numeric(OPC_concentration$Depth_Bin) <= 
-                                                   OB_Shallow_Cfin$`Intervals$depth`[i] &
-                                                   as.numeric(OPC_concentration$Depth_Bin) >=
-                                                   OB_Shallow_Cfin$`Intervals$depth`[i-1])] = OB_Shallow_Cfin$cfin_concentration[i]
-  }
-}
-
-OB_Shallow_Abundance_Plot =ggplot(data=OPC_concentration, aes(x = factor(Depth_Bin, levels = Depth_Bin))) +
-  geom_col(aes(y=OB_Shallow_Abundance)) +
-  geom_step(aes(y = OB_Shallow_Net_Abundance, group=NA),linewidth=1,direction="mid") +
-  scale_x_discrete(limits = rev) +
-  theme_bw() +
-  coord_flip() +
-  labs(y="Abundance (individuals/m^3)", x = "Depth (m)")
-ggsave(file = paste0(figure_dir, "OB_Shallow_Abundance_Comparison.png"), scale=2)
-
-require(plyr)
-OB_Mid_Cfin$Intervals = Net_Metadata[Net_Metadata$Station_Number %in% c(3, 7, 18),] %>% 
-  group_by(Net_Num) %>%
-  reframe(depth = rep(round_any(mean(`Pressure_(dbar)`), 5, f = ceiling), each = 3)) %>% slice(c(1:15))
-detach("package:plyr", unload=TRUE)
-
-OB_Mid_Cfin = OB_Mid_Cfin %>% group_by(Intervals$depth) %>% reframe (cfin_concentration = sum(cfin_concentration))
-
-OPC_concentration$OB_Mid_Net_Abundance = 0
-
-for(i in 1:nrow(OB_Mid_Cfin)) {
-  if(i == 1) {
-    OPC_concentration$OB_Mid_Net_Abundance[as.numeric(OPC_concentration$Depth_Bin) <= 
-                                              OB_Mid_Cfin$`Intervals$depth`[i]] = OB_Mid_Cfin$cfin_concentration[i]
-  } else {
-    OPC_concentration$OB_Mid_Net_Abundance[(as.numeric(OPC_concentration$Depth_Bin) <= 
-                                               OB_Mid_Cfin$`Intervals$depth`[i] &
-                                               as.numeric(OPC_concentration$Depth_Bin) >=
-                                               OB_Mid_Cfin$`Intervals$depth`[i-1])] = OB_Mid_Cfin$cfin_concentration[i]
-  }
-}
-
-OB_Mid_Abundance_Plot =ggplot(data=OPC_concentration, aes(x = factor(Depth_Bin, levels = Depth_Bin))) +
-  geom_col(aes(y=OB_Mid_Abundance)) +
-  geom_step(aes(y = OB_Mid_Net_Abundance, group=NA),linewidth=1,direction="mid") +
-  scale_x_discrete(limits = rev) +
-  theme_bw() +
-  coord_flip() +
-  labs(y="Abundance (individuals/m^3)", x = "Depth (m)")
-ggsave(file = paste0(figure_dir, "OB_Mid_Abundance_Comparison.png"), scale=2)
-
-OB_Deep_Cfin = rbind(OB_Deep_Cfin, data.frame(net=c(4, 4, 4),
-                                                    stage=c("CIV","CV","CVIF"),
-                                                    cfin_biomass=c(0,0,0),
-                                                    cfin_concentration=c(0,0,0)))
-OB_Deep_Cfin = OB_Deep_Cfin[order(OB_Deep_Cfin$net),]
-require(plyr)
-OB_Deep_Cfin$Intervals = Net_Metadata[Net_Metadata$Station_Number %in% c(4, 6, 19),] %>% 
-  group_by(Net_Num) %>%
-  reframe(depth = rep(round_any(mean(`Pressure_(dbar)`), 5, f = ceiling), each = 3)) %>% slice(c(1:15))
-detach("package:plyr", unload=TRUE)
-
-OB_Deep_Cfin = OB_Deep_Cfin %>% group_by(Intervals$depth) %>% reframe (cfin_concentration = sum(cfin_concentration))
-
-OPC_concentration$OB_Deep_Net_Abundance = 0
-
-for(i in 1:nrow(OB_Deep_Cfin)) {
-  if(i == 1) {
-    OPC_concentration$OB_Deep_Net_Abundance[as.numeric(OPC_concentration$Depth_Bin) <= 
-                                               OB_Deep_Cfin$`Intervals$depth`[i]] = OB_Deep_Cfin$cfin_concentration[i]
-  } else {
-    OPC_concentration$OB_Deep_Net_Abundance[(as.numeric(OPC_concentration$Depth_Bin) <= 
-                                                OB_Deep_Cfin$`Intervals$depth`[i] &
-                                                as.numeric(OPC_concentration$Depth_Bin) >=
-                                                OB_Deep_Cfin$`Intervals$depth`[i-1])] = OB_Deep_Cfin$cfin_concentration[i]
-  }
-}
-
-OB_Deep_Abundance_Plot =ggplot(data=OPC_concentration, aes(x = factor(Depth_Bin, levels = Depth_Bin))) +
-  geom_col(aes(y=OB_Deep_Abundance)) +
-  geom_step(aes(y = OB_Deep_Net_Abundance, group=NA),linewidth=1,direction="mid") +
-  scale_x_discrete(limits = rev) +
-  theme_bw() +
-  coord_flip() +
-  labs(y="Abundance (individuals/m^3)", x = "Depth (m)")
-ggsave(file = paste0(figure_dir, "OB_Deep_Abundance_Comparison.png"), scale=2)
-
 #####
 
 ## Super mega ultra final truth data (final) (FINAL) (2) (FINAL)
@@ -1068,7 +135,7 @@ ggsave(file = paste0(figure_dir, "OB_Deep_Abundance_Comparison.png"), scale=2)
 
 stations = c(8, 12, 15)
 OPC_casts = list(c(13, 14),c(21,22),c(27,28))
-dz = 5
+dz = 1
 min_size = 1.5
 max_size = 2
 
@@ -1085,30 +152,25 @@ OPC_to_C5 = function(concentration, speed) {
 GMB_Deep_Net_OPC_Comparison = list()
 
 for(i in 1:3) {
-  temp1 = stages %>% filter(station == stations[i] & stage %in% c("CIV","CV","CVIF")) %>%
+  temp1 = stages %>% filter(station == stations[i] & stage %in% c("CV")) %>%
     group_by(net, stage) %>%
     reframe(cfin_biomass = mean(biomass,na.rm=T), cfin_concentration = mean(concentration,na.rm=T))
   
   require(plyr)
   temp1$Intervals = Net_Metadata[Net_Metadata$Station_Number == stations[i],] %>% 
     group_by(Net_Num) %>%
-    reframe(depth = rep(round_any(mean(`Pressure_(dbar)`), 5, f = ceiling), each = 3)) %>% slice(c(1:15))
+    reframe(depth = round_any(mean(`Pressure_(dbar)`), 5, f = ceiling)) %>% slice(c(1:5))
   detach("package:plyr")
   
   temp1 = temp1 %>% group_by(Intervals$depth) %>% reframe (cfin_concentration = sum(cfin_concentration))
   
   temp2 = OPC_Data_Full %>% filter(OPC_cast_num %in% OPC_casts[[i]]) %>%
-    filter(depth>1) %>%
-    filter(flag != 'depth') %>%
-    group_by(OPC_cast_num, basin) %>%
-    reframe(opc_abundance(across(), dz = dz, min_size = min_size, max_size = max_size, good_only = T,
-                    reject_volume = T),
-      speed = opc_speed(.),
-      C5_concentration = OPC_to_C5(concentration, speed)) %>%
-    group_by(depth) %>%
-    reframe(C5_concentration= mean(C5_concentration))
+    filter(depth>1) %>% 
+    ungroup() %>%
+    reframe(opc_abundance(across(), dz = dz, min_size = min_size, max_size = max_size),
+            C5_concentration = OPC_to_C5(concentration, speed))
   
-  temp3 = data.frame(Depth_Bin = seq(0,195,5), Net_Concentration = NA, OPC_Concentration = NA)
+  temp3 = data.frame(Depth_Bin = seq(0,199,1), Net_Concentration = NA, OPC_Concentration = NA)
 
   for(j in 1:nrow(temp2)) {
     temp3$OPC_Concentration[temp3$Depth_Bin == temp2$depth[j]] = temp2$C5_concentration[j]
@@ -1123,7 +185,10 @@ for(i in 1:3) {
     }
   }
   
-  GMB_Deep_Net_OPC_Comparison[[i]] = temp3 %>% transform(Depth_Bin=cut(Depth_Bin, seq(0,200,5),right=F))
+  GMB_Deep_Net_OPC_Comparison[[i]] = temp3 %>% 
+    transform(Depth_Bin=cut(Depth_Bin, seq(0,200,5),right=F)) %>% 
+    group_by(Depth_Bin) %>% 
+    summarise(Net_Concentration = mean(Net_Concentration), OPC_Concentration = mean(OPC_Concentration, na.rm=T))
   
 }
 
@@ -1131,8 +196,8 @@ station8_plot = ggplot(data=GMB_Deep_Net_OPC_Comparison[[1]], aes(x=factor(Depth
   geom_col(aes(y=OPC_Concentration)) +
   geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
   scale_x_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
-  scale_y_continuous(limits = c(0,12000)) +
-  scale_y_break(breaks = c(1000,2000),scales=0.25,ticklabels=seq(6000,12000,6000)) +
+  scale_y_continuous(limits = c(0,6000)) +
+  scale_y_break(breaks = c(1999,2000),scales=0.25,ticklabels=seq(3000,6000,3000)) +
   coord_flip() +
   theme_bw() +
   theme(panel.grid = element_blank(),         axis.ticks.x.top = element_blank(),         axis.text.x.top = element_blank()) +
@@ -1143,8 +208,8 @@ station12_plot = ggplot(data=GMB_Deep_Net_OPC_Comparison[[2]], aes(x=factor(Dept
   geom_col(aes(y=OPC_Concentration)) +
   geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
   scale_x_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
-  scale_y_continuous(limits = c(0,12000)) +
-  scale_y_break(breaks = c(1000,2000),scales=0.25,ticklabels=seq(6000,12000,6000)) +
+  scale_y_continuous(limits = c(0,6000)) +
+  scale_y_break(breaks = c(1999,2000),scales=0.25,ticklabels=seq(3000,6000,3000)) +
   coord_flip() +
   theme_bw() +
   theme(panel.grid = element_blank(),         axis.ticks.x.top = element_blank(),         axis.text.x.top = element_blank()) +
@@ -1155,8 +220,8 @@ station15_plot = ggplot(data=GMB_Deep_Net_OPC_Comparison[[3]], aes(x=factor(Dept
   geom_col(aes(y=OPC_Concentration)) +
   geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
   scale_x_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
-  scale_y_continuous(limits = c(0,12000)) +
-  scale_y_break(breaks = c(1000,2000),scales=0.25,ticklabels=seq(6000,12000,6000)) +
+  scale_y_continuous(limits = c(0,6000)) +
+  scale_y_break(breaks = c(1999,2000),scales=0.25,ticklabels=seq(3000,6000,3000)) +
   coord_flip() +
   theme_bw() +
   theme(panel.grid = element_blank(),         axis.ticks.x.top = element_blank(),         axis.text.x.top = element_blank()) +
@@ -1171,30 +236,25 @@ OPC_casts = list(c(15,16),c(29,30))
 GMB_Mid_Net_OPC_Comparison = list()
 
 for(i in 1:2) {
-  temp1 = stages %>% filter(station == stations[i] & stage %in% c("CIV","CV","CVIF")) %>%
+  temp1 = stages %>% filter(station == stations[i] & stage %in% c("CV")) %>%
     group_by(net, stage) %>%
     reframe(cfin_biomass = mean(biomass,na.rm=T), cfin_concentration = mean(concentration,na.rm=T))
   
   require(plyr)
   temp1$Intervals = Net_Metadata[Net_Metadata$Station_Number == stations[i],] %>% 
     group_by(Net_Num) %>%
-    reframe(depth = rep(round_any(mean(`Pressure_(dbar)`), 5, f = ceiling), each = 3)) %>% slice(c(1:15))
+    reframe(depth = round_any(mean(`Pressure_(dbar)`), 5, f = ceiling)) %>% slice(c(1:5))
   detach("package:plyr")
   
   temp1 = temp1 %>% group_by(Intervals$depth) %>% reframe (cfin_concentration = sum(cfin_concentration))
   
   temp2 = OPC_Data_Full %>% filter(OPC_cast_num %in% OPC_casts[[i]]) %>%
-    filter(depth>1) %>%
-    filter(flag != 'depth') %>%
-    group_by(OPC_cast_num, basin) %>%
-    reframe(opc_abundance(across(), dz = dz, min_size = min_size, max_size = max_size, good_only = T,
-                          reject_volume = T),
-            speed = opc_speed(.),
-            C5_concentration = OPC_to_C5(concentration, speed)) %>%
-    group_by(depth) %>%
-    reframe(C5_concentration= mean(C5_concentration))
+    filter(depth>1) %>% 
+    ungroup() %>%
+    reframe(opc_abundance(across(), dz = dz, min_size = min_size, max_size = max_size, reject_volume = T),
+            C5_concentration = OPC_to_C5(concentration, speed))
   
-  temp3 = data.frame(Depth_Bin = seq(0,195,5), Net_Concentration = NA, OPC_Concentration = NA)
+  temp3 = data.frame(Depth_Bin = seq(0,199,1), Net_Concentration = NA, OPC_Concentration = NA)
   
   for(j in 1:nrow(temp2)) {
     temp3$OPC_Concentration[temp3$Depth_Bin == temp2$depth[j]] = temp2$C5_concentration[j]
@@ -1209,7 +269,10 @@ for(i in 1:2) {
     }
   }
   
-  GMB_Mid_Net_OPC_Comparison[[i]] = temp3  %>% transform(Depth_Bin=cut(Depth_Bin, seq(0,200,5),right=F))
+  GMB_Mid_Net_OPC_Comparison[[i]] = temp3 %>% 
+    transform(Depth_Bin=cut(Depth_Bin, seq(0,200,5),right=F)) %>% 
+    group_by(Depth_Bin) %>% 
+    summarise(Net_Concentration = mean(Net_Concentration), OPC_Concentration = mean(OPC_Concentration, na.rm=T))
   
 }
 
@@ -1217,8 +280,8 @@ station9_plot = ggplot(data=GMB_Mid_Net_OPC_Comparison[[1]], aes(x=factor(Depth_
   geom_col(aes(y=OPC_Concentration)) +
   geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
   scale_x_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
-  scale_y_continuous(limits = c(0,12000)) +
-  scale_y_break(breaks = c(1000,2000),scales=0.25,ticklabels=seq(6000,12000,6000)) +
+  scale_y_continuous(limits = c(0,6000)) +
+  scale_y_break(breaks = c(1999,2000),scales=0.25,ticklabels=seq(3000,6000,3000)) +
   coord_flip() +
   theme_bw() +
   theme(panel.grid = element_blank(),         axis.ticks.x.top = element_blank(),         axis.text.x.top = element_blank()) +
@@ -1229,8 +292,8 @@ station16_plot = ggplot(data=GMB_Mid_Net_OPC_Comparison[[2]], aes(x=factor(Depth
   geom_col(aes(y=OPC_Concentration)) +
   geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
   scale_x_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
-  scale_y_continuous(limits = c(0,12000)) +
-  scale_y_break(breaks = c(1000,2000),scales=0.25,ticklabels=seq(6000,12000,6000)) +
+  scale_y_continuous(limits = c(0,6000)) +
+  scale_y_break(breaks = c(1999,2000),scales=0.25,ticklabels=seq(3000,6000,3000)) +
   coord_flip() +
   theme_bw() +
   theme(panel.grid = element_blank(),         axis.ticks.x.top = element_blank(),         axis.text.x.top = element_blank()) +
@@ -1245,30 +308,25 @@ OPC_casts=list(c(17),c(23),c(31,32))
 GMB_Shallow_Net_OPC_Comparison = list()
 
 for(i in 1:3) {
-  temp1 = stages %>% filter(station == stations[i] & stage %in% c("CIV","CV","CVIF")) %>%
+  temp1 = stages %>% filter(station == stations[i] & stage %in% c("CV")) %>%
     group_by(net, stage) %>%
     reframe(cfin_biomass = mean(biomass,na.rm=T), cfin_concentration = mean(concentration,na.rm=T))
   
   require(plyr)
   temp1$Intervals = Net_Metadata[Net_Metadata$Station_Number == stations[i],] %>% 
     group_by(Net_Num) %>%
-    reframe(depth = rep(round_any(mean(`Pressure_(dbar)`), 5, f = ceiling), each = 3)) %>% slice(c(1:15))
+    reframe(depth = round_any(mean(`Pressure_(dbar)`), 5, f = ceiling)) %>% slice(c(1:5))
   detach("package:plyr")
   
   temp1 = temp1 %>% group_by(Intervals$depth) %>% reframe (cfin_concentration = sum(cfin_concentration))
   
   temp2 = OPC_Data_Full %>% filter(OPC_cast_num %in% OPC_casts[[i]]) %>%
-    filter(depth>1) %>%
-    filter(flag != 'depth') %>%
-    group_by(OPC_cast_num, basin) %>%
-    reframe(opc_abundance(across(), dz = dz, min_size = min_size, max_size = max_size, good_only = T,
-                          reject_volume = T),
-            speed = opc_speed(.),
-            C5_concentration = OPC_to_C5(concentration, speed)) %>%
-    group_by(depth) %>%
-    reframe(C5_concentration= mean(C5_concentration))
+    filter(depth>1) %>% 
+    ungroup() %>%
+    reframe(opc_abundance(across(), dz = dz, min_size = min_size, max_size = max_size, reject_volume = T),
+            C5_concentration = OPC_to_C5(concentration, speed))
   
-  temp3 = data.frame(Depth_Bin = seq(0,195,5), Net_Concentration = NA, OPC_Concentration = NA)
+  temp3 = data.frame(Depth_Bin = seq(0,199,1), Net_Concentration = NA, OPC_Concentration = NA)
   
   for(j in 1:nrow(temp2)) {
     temp3$OPC_Concentration[temp3$Depth_Bin == temp2$depth[j]] = temp2$C5_concentration[j]
@@ -1283,7 +341,10 @@ for(i in 1:3) {
     }
   }
   
-  GMB_Shallow_Net_OPC_Comparison[[i]] = temp3  %>% transform(Depth_Bin=cut(Depth_Bin, seq(0,200,5),right=F))
+  GMB_Shallow_Net_OPC_Comparison[[i]] = temp3 %>% 
+    transform(Depth_Bin=cut(Depth_Bin, seq(0,200,5),right=F)) %>% 
+    group_by(Depth_Bin) %>% 
+    summarise(Net_Concentration = mean(Net_Concentration), OPC_Concentration = mean(OPC_Concentration, na.rm=T))
   
 }
 
@@ -1291,8 +352,8 @@ station10_plot = ggplot(data=GMB_Shallow_Net_OPC_Comparison[[1]], aes(x=factor(D
   geom_col(aes(y=OPC_Concentration)) +
   geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
   scale_x_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
-  scale_y_continuous(limits = c(0,12000)) +
-  scale_y_break(breaks = c(1000,2000),scales=0.25,ticklabels=seq(6000,12000,6000)) +
+  scale_y_continuous(limits = c(0,6000)) +
+  scale_y_break(breaks = c(1999,2000),scales=0.25,ticklabels=seq(3000,6000,3000)) +
   coord_flip() +
   theme_bw() +
   theme(panel.grid = element_blank(),         axis.ticks.x.top = element_blank(),         axis.text.x.top = element_blank()) +
@@ -1303,8 +364,8 @@ station13_plot = ggplot(data=GMB_Shallow_Net_OPC_Comparison[[2]], aes(x=factor(D
   geom_col(aes(y=OPC_Concentration)) +
   geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
   scale_x_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
-  scale_y_continuous(limits = c(0,12000)) +
-  scale_y_break(breaks = c(1000,2000),scales=0.25,ticklabels=seq(6000,12000,6000)) +
+  scale_y_continuous(limits = c(0,6000)) +
+  scale_y_break(breaks = c(1999,2000),scales=0.25,ticklabels=seq(3000,6000,3000)) +
   coord_flip() +
   theme_bw() +
   theme(panel.grid = element_blank(),         axis.ticks.x.top = element_blank(),         axis.text.x.top = element_blank()) +
@@ -1315,8 +376,8 @@ station17_plot = ggplot(data=GMB_Shallow_Net_OPC_Comparison[[3]], aes(x=factor(D
   geom_col(aes(y=OPC_Concentration)) +
   geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
   scale_x_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
-  scale_y_continuous(limits = c(0,12000)) +
-  scale_y_break(breaks = c(1000,2000),scales=0.25,ticklabels=seq(6000,12000,6000)) +
+  scale_y_continuous(limits = c(0,6000)) +
+  scale_y_break(breaks = c(1999,2000),scales=0.25,ticklabels=seq(3000,6000,3000)) +
   coord_flip() +
   theme_bw() +
   theme(panel.grid = element_blank(),
@@ -1334,35 +395,45 @@ GMB_Plots = ggarrange(plotlist=list(print(station8_plot),print(station9_plot),pr
 fname=paste0(figure_dir,"GMB_All_Stations_Comparison.png")
 ggsave(file=fname,scale=3)
 
+OPC_Data_Full %>% filter(OPC_cast_num %in% c(13,14,21,22,27,28,15,16,29,30,17,23,31,32)) %>%
+  filter(depth>1) %>% 
+  ungroup() %>%
+  reframe(opc_abundance(across(), dz = dz, min_size = min_size, max_size = max_size),
+          C5_concentration = OPC_to_C5(concentration, speed)) %>%
+  transform(depth=cut(depth, seq(0,200,5),right=F)) %>% 
+  group_by(depth) %>% 
+  summarise(C5_concentration = mean(C5_concentration, na.rm=T)) %>%
+  ungroup() %>%
+  filter(row_number() >= 17) %>%
+  select(2) %>%
+  summarise(formatC(sd(as.matrix(.),na.rm=T),digits=5))
+
 #####
 
 ## OB station data
 
 stations = c(4, 6, 19)
 OPC_casts = list(c(5),c(),c(35,36))
-dz = 5
-min_size = 1.5
-max_size = 2
 
 OB_Deep_Net_OPC_Comparison = list()
 
 for(i in 1:3) {
-  temp1 = stages %>% filter(station == stations[i] & stage %in% c("CIV","CV","CVIF")) %>%
+  temp1 = stages %>% filter(station == stations[i] & stage %in% c("CV")) %>%
     group_by(net, stage) %>%
     reframe(cfin_biomass = mean(biomass,na.rm=T), cfin_concentration = mean(concentration,na.rm=T))
   if(i != 3) {
-  temp1 = rbind(temp1, data.frame(net=c(4,4,4),
-                                  stage=c("CIV","CV","CVIF"),
+  temp1 = rbind(temp1, data.frame(net=c(4),
+                                  stage=c("CV"),
                                   cfin_biomass=0,
                                   cfin_concentration=0))
   temp1 = temp1[order(temp1$net),]
   } else {
-    temp1 = rbind(temp1, data.frame(net=c(4,4,4),
-                                    stage=c("CIV","CV","CVIF"),
+    temp1 = rbind(temp1, data.frame(net=c(4),
+                                    stage=c("CV"),
                                     cfin_biomass=0,
                                     cfin_concentration=0),
-                  data.frame(net=c(5,5,5),
-                             stage=c("CIV","CV","CVIF"),
+                  data.frame(net=c(5),
+                             stage=c("CV"),
                              cfin_biomass=0,
                              cfin_concentration=0))
     temp1 = temp1[order(temp1$net),]
@@ -1371,30 +442,25 @@ for(i in 1:3) {
   require(plyr)
   temp1$Intervals = Net_Metadata[Net_Metadata$Station_Number == stations[i],] %>% 
     group_by(Net_Num) %>%
-    reframe(depth = rep(round_any(mean(`Pressure_(dbar)`), 5, f = ceiling), each = 3)) %>% slice(c(1:15))
+    reframe(depth = round_any(mean(`Pressure_(dbar)`), 5, f = ceiling)) %>% slice(c(1:5))
   detach("package:plyr")
   
   temp1 = temp1 %>% group_by(Intervals$depth) %>% reframe (cfin_concentration = sum(cfin_concentration))
   
   temp2 = OPC_Data_Full %>% filter(OPC_cast_num %in% OPC_casts[[i]]) %>%
-    filter(depth>1) %>%
-    filter(flag != 'depth') %>%
-    group_by(OPC_cast_num, basin)
+    filter(depth>1) %>% 
+    ungroup()
   
   
   if(nrow(temp2) == 0) {
-    temp2 = data.frame(C5_concentration = rep(0,times=40))
+    temp2 = data.frame(C5_concentration = rep(0,times=200))
   } else {
       temp2 = temp2 %>%
-    reframe(opc_abundance(across(), dz = dz, min_size = min_size, max_size = max_size, good_only = T,
-                          reject_volume = T),
-            speed = opc_speed(.),
-            C5_concentration = OPC_to_C5(concentration, speed)) %>%
-    group_by(depth) %>%
-    reframe(C5_concentration= mean(C5_concentration))
+        reframe(opc_abundance(across(), dz = dz, min_size = min_size, max_size = max_size, reject_volume = T),
+                C5_concentration = OPC_to_C5(concentration, speed))
     }
   
-  temp3 = data.frame(Depth_Bin = seq(0,195,5), Net_Concentration = NA, OPC_Concentration = NA)
+  temp3 = data.frame(Depth_Bin = seq(0,199,1), Net_Concentration = NA, OPC_Concentration = NA)
   
   for(j in 1:nrow(temp2)) {
     temp3$OPC_Concentration[temp3$Depth_Bin == temp2$depth[j]] = temp2$C5_concentration[j]
@@ -1409,7 +475,10 @@ for(i in 1:3) {
     }
   }
   
-  OB_Deep_Net_OPC_Comparison[[i]] = temp3  %>% transform(Depth_Bin=cut(Depth_Bin, seq(0,200,5),right=F))
+  OB_Deep_Net_OPC_Comparison[[i]] = temp3 %>% 
+    transform(Depth_Bin=cut(Depth_Bin, seq(0,200,5),right=F)) %>% 
+    group_by(Depth_Bin) %>% 
+    summarise(Net_Concentration = mean(Net_Concentration), OPC_Concentration = mean(OPC_Concentration, na.rm=T))
   
 }
 
@@ -1417,8 +486,8 @@ station4_plot = ggplot(data=OB_Deep_Net_OPC_Comparison[[1]], aes(x=factor(Depth_
   geom_col(aes(y=OPC_Concentration)) +
   geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
   scale_x_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
-  scale_y_continuous(limits = c(0,12000)) +
-  scale_y_break(breaks = c(1000,2000),scales=0.25,ticklabels=seq(6000,12000,6000)) +
+  scale_y_continuous(limits = c(0,6000)) +
+  scale_y_break(breaks = c(1999,2000),scales=0.25,ticklabels=seq(3000,6000,3000)) +
   coord_flip() +
   theme_bw() +
   theme(panel.grid = element_blank(),
@@ -1431,8 +500,8 @@ station6_plot = ggplot(data=OB_Deep_Net_OPC_Comparison[[2]], aes(x=factor(Depth_
   geom_col(aes(y=OPC_Concentration)) +
   geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
   scale_x_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
-  scale_y_continuous(limits = c(0,12000)) +
-  scale_y_break(breaks = c(1000,2000),scales=0.25,ticklabels=seq(6000,12000,6000)) +
+  scale_y_continuous(limits = c(0,6000)) +
+  scale_y_break(breaks = c(1999,2000),scales=0.25,ticklabels=seq(3000,6000,3000)) +
   coord_flip() +
   theme_bw() +
   theme(panel.grid = element_blank(),
@@ -1445,8 +514,8 @@ station19_plot = ggplot(data=OB_Deep_Net_OPC_Comparison[[3]], aes(x=factor(Depth
   geom_col(aes(y=OPC_Concentration)) +
   geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
   scale_x_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
-  scale_y_continuous(limits = c(0,12000)) +
-  scale_y_break(breaks = c(1000,2000),scales=0.25,ticklabels=seq(6000,12000,6000)) +
+  scale_y_continuous(limits = c(0,6000)) +
+  scale_y_break(breaks = c(1999,2000),scales=0.25,ticklabels=seq(3000,6000,3000)) +
   coord_flip() +
   theme_bw() +
   theme(panel.grid = element_blank(),
@@ -1463,23 +532,23 @@ OPC_casts = list(c(),c(),c(33))
 OB_Mid_Net_OPC_Comparison = list()
 
 for(i in 1:3) {
-  temp1 = stages %>% filter(station == stations[i] & stage %in% c("CIV","CV","CVIF")) %>%
+  temp1 = stages %>% filter(station == stations[i] & stage %in% c("CV")) %>%
     group_by(net, stage) %>%
     reframe(cfin_biomass = mean(biomass,na.rm=T), cfin_concentration = mean(concentration,na.rm=T))
   
   if(i == 2) {
-    temp1 = rbind(temp1, data.frame(net=c(3,3,3),
-                                    stage=c("CIV","CV","CVIF"),
+    temp1 = rbind(temp1, data.frame(net=c(3),
+                                    stage=c("CV"),
                                     cfin_biomass=0,
                                     cfin_concentration=0),
-                  data.frame(net=c(4,4,4),
-                             stage=c("CIV","CV","CVIF"),
+                  data.frame(net=c(4),
+                             stage=c("CV"),
                              cfin_biomass=0,
                              cfin_concentration=0))
     temp1 = temp1[order(temp1$net),]
   } else if(i == 3) {
-    temp1 = rbind(temp1, data.frame(net=c(5,5,5),
-                                    stage=c("CIV","CV","CVIF"),
+    temp1 = rbind(temp1, data.frame(net=c(5),
+                                    stage=c("CV"),
                                     cfin_biomass=0,
                                     cfin_concentration=0))
     temp1 = temp1[order(temp1$net),]
@@ -1488,7 +557,7 @@ for(i in 1:3) {
   require(plyr)
   temp1$Intervals = Net_Metadata[Net_Metadata$Station_Number == stations[i],] %>% 
     group_by(Net_Num) %>%
-    reframe(depth = rep(round_any(mean(`Pressure_(dbar)`), 5, f = ceiling), each = 3)) %>% slice(c(1:15))
+    reframe(depth = round_any(mean(`Pressure_(dbar)`), 5, f = ceiling)) %>% slice(c(1:5))
   detach("package:plyr")
   
   temp1 = temp1 %>% group_by(Intervals$depth) %>% reframe (cfin_concentration = sum(cfin_concentration))
@@ -1496,22 +565,18 @@ for(i in 1:3) {
   temp2 = OPC_Data_Full %>% filter(OPC_cast_num %in% OPC_casts[[i]]) %>%
     filter(depth>1) %>%
     filter(flag != 'depth') %>%
-    group_by(OPC_cast_num, basin)
+    ungroup()
   
   
   if(nrow(temp2) == 0) {
-    temp2 = data.frame(C5_concentration = rep(0,times=40))
+    temp2 = data.frame(C5_concentration = rep(0,times=200))
   } else {
     temp2 = temp2 %>%
-      reframe(opc_abundance(across(), dz = dz, min_size = min_size, max_size = max_size, good_only = T,
-                            reject_volume = T),
-              speed = opc_speed(.),
-              C5_concentration = OPC_to_C5(concentration, speed)) %>%
-      group_by(depth) %>%
-      reframe(C5_concentration = mean(C5_concentration))
+      reframe(opc_abundance(across(), dz = dz, min_size = min_size, max_size = max_size, reject_volume = T),
+              C5_concentration = OPC_to_C5(concentration, speed))
   }
   
-  temp3 = data.frame(Depth_Bin = seq(0,195,5), Net_Concentration = NA, OPC_Concentration = NA)
+  temp3 = data.frame(Depth_Bin = seq(0,199,1), Net_Concentration = NA, OPC_Concentration = NA)
   
   for(j in 1:nrow(temp2)) {
     temp3$OPC_Concentration[temp3$Depth_Bin == temp2$depth[j]] = temp2$C5_concentration[j]
@@ -1526,7 +591,10 @@ for(i in 1:3) {
     }
   }
   
-  OB_Mid_Net_OPC_Comparison[[i]] = temp3  %>% transform(Depth_Bin=cut(Depth_Bin, seq(0,200,5),right=F))
+  OB_Mid_Net_OPC_Comparison[[i]] = temp3 %>% 
+    transform(Depth_Bin=cut(Depth_Bin, seq(0,200,5),right=F)) %>% 
+    group_by(Depth_Bin) %>% 
+    summarise(Net_Concentration = mean(Net_Concentration), OPC_Concentration = mean(OPC_Concentration, na.rm=T))
   
 }
 
@@ -1534,8 +602,8 @@ station3_plot = ggplot(data=OB_Mid_Net_OPC_Comparison[[1]], aes(x=factor(Depth_B
   geom_col(aes(y=OPC_Concentration)) +
   geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
   scale_x_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
-  scale_y_continuous(limits = c(0,12000)) +
-  scale_y_break(breaks = c(1000,2000),scales=0.25,ticklabels=seq(6000,12000,6000)) +
+  scale_y_continuous(limits = c(0,6000)) +
+  scale_y_break(breaks = c(1999,2000),scales=0.25,ticklabels=seq(3000,6000,3000)) +
   coord_flip() +
   theme_bw() +
   theme(panel.grid = element_blank(),         axis.ticks.x.top = element_blank(),         axis.text.x.top = element_blank()) +
@@ -1546,8 +614,8 @@ station7_plot = ggplot(data=OB_Mid_Net_OPC_Comparison[[2]], aes(x=factor(Depth_B
   geom_col(aes(y=OPC_Concentration)) +
   geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
   scale_x_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
-  scale_y_continuous(limits = c(0,12000)) +
-  scale_y_break(breaks = c(1000,2000),scales=0.25,ticklabels=seq(6000,12000,6000)) +
+  scale_y_continuous(limits = c(0,6000)) +
+  scale_y_break(breaks = c(1999,2000),scales=0.25,ticklabels=seq(3000,6000,3000)) +
   coord_flip() +
   theme_bw() +
   theme(panel.grid = element_blank(),         axis.ticks.x.top = element_blank(),         axis.text.x.top = element_blank()) +
@@ -1558,8 +626,8 @@ station18_plot = ggplot(data=OB_Mid_Net_OPC_Comparison[[3]], aes(x=factor(Depth_
   geom_col(aes(y=OPC_Concentration)) +
   geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
   scale_x_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
-  scale_y_continuous(limits = c(0,12000)) +
-  scale_y_break(breaks = c(1000,2000),scales=0.25,ticklabels=seq(6000,12000,6000)) +
+  scale_y_continuous(limits = c(0,6000)) +
+  scale_y_break(breaks = c(1999,2000),scales=0.25,ticklabels=seq(3000,6000,3000)) +
   coord_flip() +
   theme_bw() +
   theme(panel.grid = element_blank(),         axis.ticks.x.top = element_blank(),         axis.text.x.top = element_blank()) +
@@ -1574,23 +642,23 @@ OPC_casts=list(c(7,8),c())
 OB_Shallow_Net_OPC_Comparison = list()
 
 for(i in 1:2) {
-  temp1 = stages %>% filter(station == stations[i] & stage %in% c("CIV","CV","CVIF")) %>%
+  temp1 = stages %>% filter(station == stations[i] & stage %in% c("CV")) %>%
     group_by(net, stage) %>%
     reframe(cfin_biomass = mean(biomass,na.rm=T), cfin_concentration = mean(concentration,na.rm=T))
   
   if(i == 1) {
-    temp1 = rbind(temp1, data.frame(net=c(4,4,4),
-                                    stage=c("CIV","CV","CVIF"),
+    temp1 = rbind(temp1, data.frame(net=c(4),
+                                    stage=c("CV"),
                                     cfin_biomass=0,
                                     cfin_concentration=0))
     temp1 = temp1[order(temp1$net),]
   } else if(i == 2) {
-    temp1 = rbind(temp1, data.frame(net=c(4,4,4),
-                                    stage=c("CIV","CV","CVIF"),
+    temp1 = rbind(temp1, data.frame(net=c(4),
+                                    stage=c("CV"),
                                     cfin_biomass=0,
                                     cfin_concentration=0),
-                  data.frame(net=c(5,5,5),
-                             stage=c("CIV","CV","CVIF"),
+                  data.frame(net=c(5),
+                             stage=c("CV"),
                              cfin_biomass=0,
                              cfin_concentration=0))
     temp1 = temp1[order(temp1$net),]
@@ -1599,7 +667,7 @@ for(i in 1:2) {
   require(plyr)
   temp1$Intervals = Net_Metadata[Net_Metadata$Station_Number == stations[i],] %>% 
     group_by(Net_Num) %>%
-    reframe(depth = rep(round_any(mean(`Pressure_(dbar)`), 5, f = ceiling), each = 3)) %>% slice(c(1:15))
+    reframe(depth = round_any(mean(`Pressure_(dbar)`), 5, f = ceiling)) %>% slice(c(1:5))
   detach("package:plyr")
   
   temp1 = temp1 %>% group_by(Intervals$depth) %>% reframe (cfin_concentration = sum(cfin_concentration))
@@ -1607,22 +675,18 @@ for(i in 1:2) {
   temp2 = OPC_Data_Full %>% filter(OPC_cast_num %in% OPC_casts[[i]]) %>%
     filter(depth>1) %>%
     filter(flag != 'depth') %>%
-    group_by(OPC_cast_num, basin)
+    ungroup()
   
   
   if(nrow(temp2) == 0) {
-    temp2 = data.frame(C5_concentration = rep(0,times=40))
+    temp2 = data.frame(C5_concentration = rep(0,times=200))
   } else {
     temp2 = temp2 %>%
-      reframe(opc_abundance(across(), dz = dz, min_size = min_size, max_size = max_size, good_only = T,
-                            reject_volume = T),
-              speed = opc_speed(.),
-              C5_concentration = OPC_to_C5(concentration, speed)) %>%
-      group_by(depth) %>%
-      reframe(C5_concentration = mean(C5_concentration))
+      reframe(opc_abundance(across(), dz = dz, min_size = min_size, max_size = max_size, reject_volume = T),
+              C5_concentration = OPC_to_C5(concentration, speed))
   }
   
-  temp3 = data.frame(Depth_Bin = seq(0,195,5), Net_Concentration = NA, OPC_Concentration = NA)
+  temp3 = data.frame(Depth_Bin = seq(0,199,1), Net_Concentration = NA, OPC_Concentration = NA)
   
   for(j in 1:nrow(temp2)) {
     temp3$OPC_Concentration[temp3$Depth_Bin == temp2$depth[j]] = temp2$C5_concentration[j]
@@ -1637,7 +701,10 @@ for(i in 1:2) {
     }
   }
   
-  OB_Shallow_Net_OPC_Comparison[[i]] = temp3  %>% transform(Depth_Bin=cut(Depth_Bin, seq(0,200,5),right=F))
+  OB_Shallow_Net_OPC_Comparison[[i]] = temp3 %>% 
+    transform(Depth_Bin=cut(Depth_Bin, seq(0,200,5),right=F)) %>% 
+    group_by(Depth_Bin) %>% 
+    summarise(Net_Concentration = mean(Net_Concentration), OPC_Concentration = mean(OPC_Concentration, na.rm=T))
   
 }
 
@@ -1645,8 +712,8 @@ station5_plot = ggplot(data=OB_Shallow_Net_OPC_Comparison[[1]], aes(x=factor(Dep
   geom_col(aes(y=OPC_Concentration)) +
   geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
   scale_x_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
-  scale_y_continuous(limits = c(0,12000)) +
-  scale_y_break(breaks = c(1000,2000),scales=0.25,ticklabels=seq(6000,12000,6000)) +
+  scale_y_continuous(limits = c(0,6000)) +
+  scale_y_break(breaks = c(1999,2000),scales=0.25,ticklabels=seq(3000,6000,3000)) +
   coord_flip() +
   theme_bw() +
   theme(panel.grid = element_blank(),         axis.ticks.x.top = element_blank(),         axis.text.x.top = element_blank()) +
@@ -1657,14 +724,27 @@ station20_plot = ggplot(data=OB_Shallow_Net_OPC_Comparison[[2]], aes(x=factor(De
   geom_col(aes(y=OPC_Concentration)) +
   geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
   scale_x_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
-  scale_y_continuous(limits = c(0,12000)) +
-  scale_y_break(breaks = c(1000,2000),scales=0.25,ticklabels=seq(6000,12000,6000)) +
+  scale_y_continuous(limits = c(0,6000)) +
+  scale_y_break(breaks = c(1999,2000),scales=0.25,ticklabels=seq(3000,6000,3000)) +
   coord_flip() +
   theme_bw() +
   theme(panel.grid = element_blank(),         axis.ticks.x.top = element_blank(),         axis.text.x.top = element_blank()) +
   labs(y="Concentration (individuals/m^3)",x="Depth (m)")
 ggsave(file=paste0(figure_dir,"Net_OPC_Depth_Profiles/","Station_20_Net_OPC_Comparison.png"),
        scale=2)
+
+OPC_Data_Full %>% filter(OPC_cast_num %in% c(5, 35, 36, 33, 7, 8)) %>%
+  filter(depth>1) %>% 
+  ungroup() %>%
+  reframe(opc_abundance(across(), dz = dz, min_size = min_size, max_size = max_size),
+          C5_concentration = OPC_to_C5(concentration, speed)) %>%
+  transform(depth=cut(depth, seq(0,200,5),right=F)) %>% 
+  group_by(depth) %>% 
+  summarise(C5_concentration = mean(C5_concentration, na.rm=T)) %>%
+  ungroup() %>%
+  filter(row_number() >= 17) %>%
+  select(2) %>%
+  summarise(formatC(sd(as.matrix(.),na.rm=T),digits=5))
 
 
 OB_Plots = ggarrange(plotlist=list(print(station4_plot),print(station3_plot),print(station5_plot),
@@ -1788,6 +868,9 @@ names(echo_grouped_svdiff)[2:ncol(echo_grouped_svdiff)] = c(3, 4,
                                                             18, 19, 20)
 echo_grouped_svdiff$Depth_Bin = factor(echo_grouped_svdiff$Depth_Bin, levels = echo_grouped_svdiff$Depth_Bin)
 
+echo_grouped_sv[1,2:ncol(echo_grouped_sv)] = NaN
+echo_grouped_svdiff[1,2:ncol(echo_grouped_sv)] = NaN
+
 sv_plots=list()
 svdiff_plots=list()
 
@@ -1795,12 +878,12 @@ for(p in 1:16) {
   sv_plots[[p]] = local({
     p = p
     plot = ggplot(data = echo_grouped_sv, aes(y = Depth_Bin)) +
-      geom_col(aes(x = echo_grouped_sv[,p+1])) +
+      geom_col(aes(x = echo_grouped_sv[,p+1]+100)) +
       scale_y_discrete(limits=rev, breaks = echo_grouped_sv$Depth_Bin[c(seq(1,40,3))]) +
-      scale_x_reverse() +
+      scale_x_continuous(labels=seq(-85,-60,5)) +
       theme_bw() +
       theme(panel.grid = element_blank()) +
-      coord_cartesian(xlim = c(-60,-85), expand = T) + 
+      coord_cartesian(xlim = c(-85+100,-60+100), expand = T) + 
       labs(x = "Masked 455 kHz Sv (dB)",y="Depth (m)")})
   fname=paste0(figure_dir, "Sv_Depth_Profiles/Station_",names(echo_grouped_sv)[p+1],"_Masked_455kHz_Sv.png")
   ggsave(sv_plots[[p]],file=fname,scale=2)
@@ -1857,67 +940,1009 @@ for(i in 1:length(DFs)) {
 GMB_Shallow = cbind(echo_grouped_sv[,c(1,9,11,14)] %>% 
                       reframe(Depth_Bin = Depth_Bin, Mean_Sv = rowMeans(select(., 2:4), na.rm = TRUE)),
                     echo_grouped_svdiff[,c(9,11,14)] %>% 
-                      reframe(Mean_SvDiff = rowMeans(select(.,), na.rm = TRUE)))
-ggplot(data = GMB_Shallow, aes(y = Depth_Bin)) +
-  geom_col(aes(x=Mean_Sv)) +
-  scale_y_discrete(limits=rev) +
-  scale_x_reverse() +
-  theme_bw() +
-  labs(x = "Masked 455 kHz (dB)", y="Depth (m)")
+                      reframe(Mean_SvDiff = rowMeans(select(.,1:3), na.rm = TRUE)))
+GMB_Shallow_Sv_Plot = ggarrange(ggplot(data = GMB_Shallow, aes(y = Depth_Bin)) +
+    geom_col(aes(x=Mean_Sv+100)) +
+    scale_y_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
+    scale_x_continuous(labels=seq(-85,-60,5)) +
+    coord_cartesian(xlim = c(-85+100,-60+100), expand = T) + 
+    theme_bw() +
+    theme(panel.grid = element_blank()) +
+    labs(x = "Masked 455 kHz (dB)", y="Depth (m)"),
+  ggplot(data = GMB_Shallow, aes(y = Depth_Bin)) +
+    geom_col(aes(x=Mean_SvDiff)) +
+    scale_y_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
+    theme_bw() +
+    theme(panel.grid = element_blank()) +
+    coord_cartesian(xlim = c(5,16), expand = T) +
+    labs(x = "455-200 kHz Sv Difference (dB)", y="Depth (m)"))
+ggsave(file = paste0(figure_dir, "GMB_Shallow_Sv_and_SvDiff.png"), scale=2)
 
 GMB_Mid = cbind(echo_grouped_sv[,c(1,8,13)] %>% 
                       reframe(Depth_Bin = Depth_Bin, Mean_Sv = rowMeans(select(., 2:3), na.rm = TRUE)),
                     echo_grouped_svdiff[,c(8,13)] %>% 
-                      reframe(Mean_SvDiff = rowMeans(select(.,), na.rm = TRUE)))
-ggplot(data = GMB_Mid, aes(y = Depth_Bin)) +
-  geom_col(aes(x=Mean_Sv)) +
-  scale_y_discrete(limits=rev) +
-  scale_x_reverse() +
-  theme_bw() +
-  labs(x = "Masked 455 kHz (dB)", y="Depth (m)")
+                      reframe(Mean_SvDiff = rowMeans(select(.,1:2), na.rm = TRUE)))
+GMB_Mid_Sv_Plot = ggarrange(ggplot(data = GMB_Mid, aes(y = Depth_Bin)) +
+            geom_col(aes(x=Mean_Sv+100)) +
+            scale_y_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
+            scale_x_continuous(labels=seq(-85,-60,5)) +
+            coord_cartesian(xlim = c(-85+100,-60+100), expand = T) + 
+            theme_bw() +
+            theme(panel.grid = element_blank()) +
+            labs(x = "Masked 455 kHz (dB)", y="Depth (m)"),
+          ggplot(data = GMB_Mid, aes(y = Depth_Bin)) +
+            geom_col(aes(x=Mean_SvDiff)) +
+            scale_y_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
+            theme_bw() +
+            theme(panel.grid = element_blank()) +
+            coord_cartesian(xlim = c(5,16), expand = T) +
+            labs(x = "455-200 kHz Sv Difference (dB)", y="Depth (m)"))
+ggsave(file = paste0(figure_dir, "GMB_Mid_Sv_and_SvDiff.png"), scale=2)
 
 GMB_Deep = cbind(echo_grouped_sv[,c(1,7,10,12)] %>% 
                       reframe(Depth_Bin = Depth_Bin, Mean_Sv = rowMeans(select(., 2:4), na.rm = TRUE)),
                     echo_grouped_svdiff[,c(7,10,12)] %>% 
-                      reframe(Mean_SvDiff = rowMeans(select(.,), na.rm = TRUE)))
-ggplot(data = GMB_Deep, aes(y = Depth_Bin)) +
-  geom_col(aes(x=Mean_Sv)) +
-  scale_y_discrete(limits=rev) +
-  scale_x_reverse() +
-  theme_bw() +
-  labs(x = "Masked 455 kHz (dB)", y="Depth (m)")
+                      reframe(Mean_SvDiff = rowMeans(select(.,1:3), na.rm = TRUE)))
+GMB_Deep_Sv_Plot = ggarrange(ggplot(data = GMB_Deep, aes(y = Depth_Bin)) +
+            geom_col(aes(x=Mean_Sv+100)) +
+            scale_y_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
+            scale_x_continuous(labels=seq(-85,-60,5)) +
+            coord_cartesian(xlim = c(-85+100,-60+100), expand = T) + 
+            theme_bw() +
+            theme(panel.grid = element_blank()) +
+            labs(x = "Masked 455 kHz (dB)", y="Depth (m)"),
+          ggplot(data = GMB_Deep, aes(y = Depth_Bin)) +
+            geom_col(aes(x=Mean_SvDiff)) +
+            scale_y_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
+            theme_bw() +
+            theme(panel.grid = element_blank()) +
+            coord_cartesian(xlim = c(5,16), expand = T) +
+            labs(x = "455-200 kHz Sv Difference (dB)", y="Depth (m)"))
+ggsave(file = paste0(figure_dir, "GMB_Deep_Sv_and_SvDiff.png"), scale=2)
 
 
 OB_Shallow = cbind(echo_grouped_sv[,c(1,4,17)] %>% 
                       reframe(Depth_Bin = Depth_Bin, Mean_Sv = rowMeans(select(., 2:3), na.rm = TRUE)),
                     echo_grouped_svdiff[,c(4,17)] %>% 
-                      reframe(Mean_SvDiff = rowMeans(select(.,), na.rm = TRUE)))
-ggplot(data = OB_Shallow, aes(y = Depth_Bin)) +
-  geom_col(aes(x=Mean_Sv)) +
-  scale_y_discrete(limits=rev) +
-  scale_x_reverse() +
-  theme_bw() +
-  labs(x = "Masked 455 kHz (dB)", y="Depth (m)")
+                      reframe(Mean_SvDiff = rowMeans(select(.,1:2), na.rm = TRUE)))
+OB_Shallow_Sv_Plot = ggarrange(ggplot(data = OB_Shallow, aes(y = Depth_Bin)) +
+            geom_col(aes(x=Mean_Sv+100)) +
+            scale_y_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
+            scale_x_continuous(labels=seq(-85,-60,5)) +
+            coord_cartesian(xlim = c(-85+100,-60+100), expand = T) + 
+            theme_bw() +
+            theme(panel.grid = element_blank()) +
+            labs(x = "Masked 455 kHz (dB)", y="Depth (m)"),
+          ggplot(data = OB_Shallow, aes(y = Depth_Bin)) +
+            geom_col(aes(x=Mean_SvDiff)) +
+            scale_y_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
+            theme_bw() +
+            theme(panel.grid = element_blank()) +
+            coord_cartesian(xlim = c(5,16), expand = T) +
+            labs(x = "455-200 kHz Sv Difference (dB)", y="Depth (m)"))
+ggsave(file = paste0(figure_dir, "OB_Shallow_Sv_and_SvDiff.png"), scale=2)
 
 OB_Mid = cbind(echo_grouped_sv[,c(1,2,6,15)] %>% 
                   reframe(Depth_Bin = Depth_Bin, Mean_Sv = rowMeans(select(., 2:4), na.rm = TRUE)),
                 echo_grouped_svdiff[,c(2,6,15)] %>% 
-                  reframe(Mean_SvDiff = rowMeans(select(.,), na.rm = TRUE)))
-ggplot(data = OB_Mid, aes(y = Depth_Bin)) +
-  geom_col(aes(x=Mean_Sv)) +
-  scale_y_discrete(limits=rev) +
-  scale_x_reverse() +
-  theme_bw() +
-  labs(x = "Masked 455 kHz (dB)", y="Depth (m)")
+                  reframe(Mean_SvDiff = rowMeans(select(.,1:3), na.rm = TRUE)))
+OB_Mid_Sv_Plot = ggarrange(ggplot(data = OB_Mid, aes(y = Depth_Bin)) +
+            geom_col(aes(x=Mean_Sv+100)) +
+            scale_y_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
+            scale_x_continuous(labels=seq(-85,-60,5)) +
+            coord_cartesian(xlim = c(-85+100,-60+100), expand = T) + 
+            theme_bw() +
+            theme(panel.grid = element_blank()) +
+            labs(x = "Masked 455 kHz (dB)", y="Depth (m)"),
+          ggplot(data = OB_Mid, aes(y = Depth_Bin)) +
+            geom_col(aes(x=Mean_SvDiff)) +
+            scale_y_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
+            theme_bw() +
+            theme(panel.grid = element_blank()) +
+            coord_cartesian(xlim = c(5,16), expand = T) +
+            labs(x = "455-200 kHz Sv Difference (dB)", y="Depth (m)"))
+ggsave(file = paste0(figure_dir, "OB_Mid_Sv_and_SvDiff.png"), scale=2)
 
 OB_Deep = cbind(echo_grouped_sv[,c(1,3,5,16)] %>% 
                    reframe(Depth_Bin = Depth_Bin, Mean_Sv = rowMeans(select(., 2:4), na.rm = TRUE)),
                  echo_grouped_svdiff[,c(3,5,16)] %>% 
-                   reframe(Mean_SvDiff = rowMeans(select(.,), na.rm = TRUE)))
-ggplot(data = OB_Deep, aes(y = Depth_Bin)) +
-  geom_col(aes(x=Mean_Sv)) +
-  scale_y_discrete(limits=rev) +
-  scale_x_reverse() +
-  theme_bw() +
-  labs(x = "Masked 455 kHz (dB)", y="Depth (m)")
+                   reframe(Mean_SvDiff = rowMeans(select(.,1:3), na.rm = TRUE)))
+OB_Deep_Sv_Plot = ggarrange(ggplot(data = OB_Deep, aes(y = Depth_Bin)) +
+            geom_col(aes(x=Mean_Sv+100)) +
+            scale_y_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
+            scale_x_continuous(labels=seq(-85,-60,5)) +
+            coord_cartesian(xlim = c(-85+100,-60+100), expand = T) + 
+            theme_bw() +
+            theme(panel.grid = element_blank()) +
+            labs(x = "Masked 455 kHz (dB)", y="Depth (m)"),
+          ggplot(data = OB_Deep, aes(y = Depth_Bin)) +
+            geom_col(aes(x=Mean_SvDiff)) +
+            scale_y_discrete(limits=rev,breaks=GMB_Deep_Net_OPC_Comparison[[1]]$Depth_Bin[c(seq(1,40,3))]) +
+            theme_bw() +
+            theme(panel.grid = element_blank()) +
+            coord_cartesian(xlim = c(5,16), expand = T) +
+            labs(x = "455-200 kHz Sv Difference (dB)", y="Depth (m)"))
+ggsave(file = paste0(figure_dir, "OB_Deep_Sv_and_SvDiff.png"), scale=2)
 
+#####
+
+## Plot net/OPC data by "stations"
+
+# Station numbers:
+# GMB shallow: 10, 13, 17, seafloor depth 158
+# OB shallow: 5, 20, seafloor depth 110
+
+# GMB mid: 9, 16, seafloor depth 160.5
+# OB mid: 3, 7, 18, seafloor depth 127.3
+
+# GMB deep: 8, 12, 15, seafloor depth 169.3
+# OB deep: 4, 6, 19, seafloor depth 135
+
+Averaged_Net_Concentrations = function(stns) {
+  
+  temp1 = stages %>% filter(station %in% stns & stage %in% c("CV")) %>%
+  group_by(net, stage) %>%
+  reframe(cfin_biomass = mean(biomass,na.rm=T), cfin_concentration = mean(concentration,na.rm=T))
+
+require(plyr)
+temp1$Intervals = Net_Metadata[Net_Metadata$Station_Number %in% stns,] %>% 
+  group_by(Net_Num) %>%
+  reframe(depth = round_any(mean(`Pressure_(dbar)`), 5, f = ceiling)) %>% slice(c(1:5))
+detach("package:plyr")
+
+temp1 = temp1 %>% group_by(Intervals$depth) %>% reframe (cfin_concentration = sum(cfin_concentration))
+
+temp3 = data.frame(Depth_Bin = seq(0,195,5), Net_Concentration = NA)
+
+for(k in 1:nrow(temp1)) {
+  if(k == 1) {
+    temp3$Net_Concentration[temp3$Depth_Bin <= temp1$`Intervals$depth`[k]] = temp1$cfin_concentration[k]
+  } else {
+    temp3$Net_Concentration[(temp3$Depth_Bin <= temp1$`Intervals$depth`[k] &
+                               temp3$Depth_Bin >= temp1$`Intervals$depth`[k-1])] = temp1$cfin_concentration[k]
+  }
+}
+return(temp3$Net_Concentration)
+}
+
+GMB_Shallow = cbind(GMB_Shallow_Net_OPC_Comparison[[1]][1],
+                 Averaged_Net_Concentrations(c("10","13","17")),
+                 rowMeans(cbind(GMB_Shallow_Net_OPC_Comparison[[1]][3],
+                                GMB_Shallow_Net_OPC_Comparison[[2]][3],
+                                GMB_Shallow_Net_OPC_Comparison[[3]][3]),na.rm=T))
+names(GMB_Shallow)[2:3] = c("Net_Concentration","OPC_Concentration")
+
+GMB_Shallow_Abundance_Plot = ggplot(data=GMB_Shallow, aes(x=factor(Depth_Bin))) +
+  geom_col(aes(y=OPC_Concentration)) +
+  geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
+  scale_x_discrete(limits=rev,breaks=GMB_Shallow$Depth_Bin[c(seq(1,40,3))]) +
+  scale_y_continuous(limits = c(0, 5000)) +
+  scale_y_break(breaks = c(1000,1001), scales = 0.25, ticklabels=seq(2000, 4000, 2000), expand = F) +
+  # scale_y_continuous(limits = c(0,40000)) +
+  # scale_y_break(breaks = c(5999,6000),scales=0.25,ticklabels=seq(15000,35000,20000), expand = F) +
+  coord_flip() +
+  theme_bw() +
+  theme(panel.grid = element_blank(),
+        axis.ticks.x.top = element_blank(),
+        axis.text.x.top = element_blank()) +
+  labs(y=element_blank(),x="Depth (m)")
+# ggsave(file = paste0(figure_dir, "GMB_Shallow_Abundance_Comparison.png"), scale=2)
+
+GMB_Mid = cbind(GMB_Mid_Net_OPC_Comparison[[1]][1],
+                 Averaged_Net_Concentrations(c("9","16")),
+                 rowMeans(cbind(GMB_Mid_Net_OPC_Comparison[[1]][3],
+                                GMB_Mid_Net_OPC_Comparison[[2]][3]),na.rm=T))
+names(GMB_Mid)[2:3] = c("Net_Concentration","OPC_Concentration")
+
+GMB_Mid_Abundance_Plot = ggplot(data=GMB_Mid, aes(x=factor(Depth_Bin))) +
+  geom_col(aes(y=OPC_Concentration)) +
+  geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
+  scale_x_discrete(limits=rev,breaks=GMB_Mid$Depth_Bin[c(seq(1,40,3))]) +
+  scale_y_continuous(limits = c(0, 5000)) +
+  scale_y_break(breaks = c(1000,1001), scales = 0.25, ticklabels=seq(2000, 4000, 2000), expand = F) +
+  # scale_y_continuous(limits = c(0,40000)) +
+  # scale_y_break(breaks = c(5999,6000),scales=0.25,ticklabels=seq(15000,35000,20000), expand = F) +
+  coord_flip() +
+  theme_bw() +
+  theme(panel.grid = element_blank(),
+        axis.ticks.x.top = element_blank(),
+        axis.text.x.top = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text.y = element_blank()) +
+  labs(y=element_blank(),x=element_blank())
+# ggsave(file = paste0(figure_dir, "GMB_Mid_Abundance_Comparison.png"), scale=2)
+
+GMB_Deep = cbind(GMB_Deep_Net_OPC_Comparison[[1]][1],
+                 Averaged_Net_Concentrations(c("8","12","15")),
+               rowMeans(cbind(GMB_Deep_Net_OPC_Comparison[[1]][3],
+                              GMB_Deep_Net_OPC_Comparison[[2]][3],
+                              GMB_Deep_Net_OPC_Comparison[[3]][3]),na.rm=T))
+names(GMB_Deep)[2:3] = c("Net_Concentration","OPC_Concentration")
+
+GMB_Deep_Abundance_Plot = ggplot(data=GMB_Deep, aes(x=factor(Depth_Bin))) +
+  geom_col(aes(y=OPC_Concentration)) +
+  geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
+  scale_x_discrete(limits=rev,breaks=GMB_Deep$Depth_Bin[c(seq(1,40,3))]) +
+  scale_y_continuous(limits = c(0, 5000)) +
+  scale_y_break(breaks = c(1000,1001), scales = 0.25, ticklabels=seq(2000, 4000, 2000), expand = F) +
+  # scale_y_continuous(limits = c(0,40000)) +
+  # scale_y_break(breaks = c(5999,6000),scales=0.25,ticklabels=seq(15000,35000,20000), expand = F) +
+  coord_flip() +
+  theme_bw() +
+  theme(panel.grid = element_blank(),
+        axis.ticks.x.top = element_blank(),
+        axis.text.x.top = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text.y = element_blank()) +
+  labs(y=element_blank(),x=element_blank())
+# ggsave(file = paste0(figure_dir, "GMB_Deep_Abundance_Comparison.png"), scale=2)
+
+fig = ggarrange(print(GMB_Shallow_Abundance_Plot), print(GMB_Mid_Abundance_Plot), print(GMB_Deep_Abundance_Plot),
+                ncol=3,nrow=1,
+                labels="AUTO") + theme(plot.background = element_rect(fill = 'white',color='white'))
+annotate_figure(fig, bottom = textGrob("Concentration (individuals/m^3)",gp = gpar(cex = 1),vjust=-1.5))
+ggsave(file = paste0(figure_dir, "GMB_Abundance_Comparisons.png"),scale=2)
+#####
+
+temp1 = stages %>% filter(station %in% c(5,20) & stage %in% c("CV")) %>%
+  group_by(net, stage) %>%
+  reframe(cfin_biomass = mean(biomass,na.rm=T), cfin_concentration = mean(concentration,na.rm=T))
+
+temp1 = rbind(temp1, data.frame(net=4,
+                                stage=c("CV"),
+                                cfin_biomass=0,
+                                cfin_concentration=0))
+temp1 = temp1[order(temp1$net),]
+
+require(plyr)
+temp1$Intervals = Net_Metadata[Net_Metadata$Station_Number %in% c(5,20),] %>% 
+  group_by(Net_Num) %>%
+  reframe(depth = round_any(mean(`Pressure_(dbar)`), 5, f = ceiling)) %>% slice(c(1:5))
+detach("package:plyr")
+
+temp1 = temp1 %>% group_by(Intervals$depth) %>% reframe (cfin_concentration = sum(cfin_concentration))
+
+temp3 = data.frame(Depth_Bin = seq(0,195,5), Net_Concentration = NA)
+
+for(k in 1:nrow(temp1)) {
+  if(k == 1) {
+    temp3$Net_Concentration[temp3$Depth_Bin <= temp1$`Intervals$depth`[k]] = temp1$cfin_concentration[k]
+  } else {
+    temp3$Net_Concentration[(temp3$Depth_Bin <= temp1$`Intervals$depth`[k] &
+                               temp3$Depth_Bin >= temp1$`Intervals$depth`[k-1])] = temp1$cfin_concentration[k]
+  }
+}
+
+OB_Shallow = cbind(OB_Shallow_Net_OPC_Comparison[[1]][1],
+                   temp3$Net_Concentration,
+                    rowMeans(cbind(OB_Shallow_Net_OPC_Comparison[[1]][3],
+                                   OB_Shallow_Net_OPC_Comparison[[2]][3]),na.rm=T))
+names(OB_Shallow)[2:3] = c("Net_Concentration","OPC_Concentration")
+
+OB_Shallow_Abundance_Plot = ggplot(data=OB_Shallow, aes(x=factor(Depth_Bin))) +
+  geom_col(aes(y=OPC_Concentration)) +
+  geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
+  scale_x_discrete(limits=rev,breaks=OB_Shallow$Depth_Bin[c(seq(1,40,3))]) +
+  scale_y_continuous(limits = c(0, 5000)) +
+  scale_y_break(breaks = c(1000,1001), scales = 0.25, ticklabels=seq(2000, 4000, 2000), expand = F) +
+  # scale_y_continuous(limits = c(0,40000)) +
+  # scale_y_break(breaks = c(5999,6000),scales=0.25,ticklabels=seq(15000,35000,20000), expand = F) +
+  coord_flip() +
+  theme_bw() +
+  theme(panel.grid = element_blank(),
+        axis.ticks.x.top = element_blank(),
+        axis.text.x.top = element_blank()) +
+  labs(y=element_blank(),x="Depth (m)")
+# ggsave(file = paste0(figure_dir, "OB_Shallow_Abundance_Comparison.png"), scale=2)
+
+OB_Mid = cbind(OB_Mid_Net_OPC_Comparison[[1]][1],
+                Averaged_Net_Concentrations(c(3,7,18)),
+                rowMeans(cbind(OB_Mid_Net_OPC_Comparison[[1]][3],
+                               OB_Mid_Net_OPC_Comparison[[2]][3],
+                               OB_Mid_Net_OPC_Comparison[[3]][3]),na.rm=T))
+names(OB_Mid)[2:3] = c("Net_Concentration","OPC_Concentration")
+
+OB_Mid_Abundance_Plot = ggplot(data=OB_Mid, aes(x=factor(Depth_Bin))) +
+  geom_col(aes(y=OPC_Concentration)) +
+  geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
+  scale_x_discrete(limits=rev,breaks=OB_Mid$Depth_Bin[c(seq(1,40,3))]) +
+  scale_y_continuous(limits = c(0, 5000)) +
+  scale_y_break(breaks = c(1000,1001), scales = 0.25, ticklabels=seq(2000, 4000, 2000), expand = F) +
+  # scale_y_continuous(limits = c(0,40000)) +
+  # scale_y_break(breaks = c(5999,6000),scales=0.25,ticklabels=seq(15000,35000,20000), expand = F) +
+  coord_flip() +
+  theme_bw() +
+  theme(panel.grid = element_blank(),
+        axis.ticks.x.top = element_blank(),
+        axis.text.x.top = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text.y = element_blank()) +
+  labs(y=element_blank(),x=element_blank())
+# ggsave(file = paste0(figure_dir, "OB_Mid_Abundance_Comparison.png"), scale=2)
+
+
+temp1 = stages %>% filter(station %in% c(4, 6, 19) & stage %in% c("CV")) %>%
+  group_by(net, stage) %>%
+  reframe(cfin_biomass = mean(biomass,na.rm=T), cfin_concentration = mean(concentration,na.rm=T))
+temp1 = rbind(temp1, data.frame(net=4,
+                                stage=c("CV"),
+                                cfin_biomass=0,
+                                cfin_concentration=0))
+temp1 = temp1[order(temp1$net),]
+
+require(plyr)
+temp1$Intervals = Net_Metadata[Net_Metadata$Station_Number %in% c(4, 6, 19),] %>% 
+  group_by(Net_Num) %>%
+  reframe(depth = round_any(mean(`Pressure_(dbar)`), 5, f = ceiling)) %>% slice(c(1:5))
+detach("package:plyr")
+
+temp1 = temp1 %>% group_by(Intervals$depth) %>% reframe (cfin_concentration = sum(cfin_concentration))
+
+temp3 = data.frame(Depth_Bin = seq(0,195,5), Net_Concentration = NA)
+
+for(k in 1:nrow(temp1)) {
+  if(k == 1) {
+    temp3$Net_Concentration[temp3$Depth_Bin <= temp1$`Intervals$depth`[k]] = temp1$cfin_concentration[k]
+  } else {
+    temp3$Net_Concentration[(temp3$Depth_Bin <= temp1$`Intervals$depth`[k] &
+                               temp3$Depth_Bin >= temp1$`Intervals$depth`[k-1])] = temp1$cfin_concentration[k]
+  }
+}
+
+OB_Deep = cbind(OB_Deep_Net_OPC_Comparison[[1]][1],
+                 temp3$Net_Concentration,
+                 rowMeans(cbind(OB_Deep_Net_OPC_Comparison[[1]][3],
+                                OB_Deep_Net_OPC_Comparison[[2]][3],
+                                OB_Deep_Net_OPC_Comparison[[3]][3]),na.rm=T))
+names(OB_Deep)[2:3] = c("Net_Concentration","OPC_Concentration")
+
+OB_Deep_Abundance_Plot = ggplot(data=OB_Deep, aes(x=factor(Depth_Bin))) +
+  geom_col(aes(y=OPC_Concentration)) +
+  geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
+  scale_x_discrete(limits=rev,breaks=OB_Deep$Depth_Bin[c(seq(1,40,3))]) +
+  scale_y_continuous(limits = c(0, 5000)) +
+  scale_y_break(breaks = c(1000,1001), scales = 0.25, ticklabels=seq(2000, 4000, 2000), expand = F) +
+  # scale_y_continuous(limits = c(0,40000)) +
+  # scale_y_break(breaks = c(5999,6000),scales=0.25,ticklabels=seq(15000,35000,20000), expand = F) +
+  coord_flip() +
+  theme_bw() +
+  theme(panel.grid = element_blank(),
+        axis.ticks.x.top = element_blank(),
+        axis.text.x.top = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text.y = element_blank()) +
+  labs(y=element_blank(),x=element_blank())
+# ggsave(file = paste0(figure_dir, "OB_Deep_Abundance_Comparison.png"), scale=2)
+
+fig = ggarrange(print(OB_Shallow_Abundance_Plot), print(OB_Mid_Abundance_Plot), print(OB_Deep_Abundance_Plot),
+          ncol=3,nrow=1,
+          labels=c("D","E","F")) + theme(plot.background = element_rect(fill = 'white',color='white'))
+annotate_figure(fig, bottom = textGrob("Concentration (individuals/m^3)",gp = gpar(cex = 1),vjust=-1.5))
+ggsave(file = paste0(figure_dir, "OB_Abundance_Comparisons.png"),scale=2)
+
+#####
+
+## "Station" comparisons between net/OPC and echosounder
+
+GMB_Shallow_Full = ggarrange(print(GMB_Shallow_Abundance_Plot),print(GMB_Shallow_Sv_Plot))
+ggsave(GMB_Shallow_Full, file=paste0(figure_dir, "GMB_Shallow_Full_Comparison.png"),scale=2.5)
+
+GMB_Mid_Full = ggarrange(print(GMB_Mid_Abundance_Plot),print(GMB_Mid_Sv_Plot))
+ggsave(GMB_Mid_Full, file=paste0(figure_dir, "GMB_Mid_Full_Comparison.png"),scale=2.5)
+
+GMB_Deep_Full = ggarrange(print(GMB_Deep_Abundance_Plot),print(GMB_Deep_Sv_Plot))
+ggsave(GMB_Deep_Full, file=paste0(figure_dir, "GMB_Deep_Full_Comparison.png"),scale=2.5)
+
+OB_Shallow_Full = ggarrange(print(OB_Shallow_Abundance_Plot),print(OB_Shallow_Sv_Plot))
+ggsave(OB_Shallow_Full, file=paste0(figure_dir, "OB_Shallow_Full_Comparison.png"),scale=2.5)
+
+OB_Mid_Full = ggarrange(print(OB_Mid_Abundance_Plot),print(OB_Mid_Sv_Plot))
+ggsave(OB_Mid_Full, file=paste0(figure_dir, "OB_Mid_Full_Comparison.png"),scale=2.5)
+
+OB_Deep_Full = ggarrange(print(OB_Deep_Abundance_Plot),print(OB_Deep_Sv_Plot))
+ggsave(OB_Deep_Full, file=paste0(figure_dir, "OB_Deep_Full_Comparison.png"),scale=2.5)
+
+#####
+
+## Echosounder Sv adjustment and SONAR equation for C. fin concentration
+
+# Want to test the effect of forcing the slope to be 1 vs using a linear model
+# First, adjust Sv(echo) to Sv(cfin) using the correlation equation of your choice
+# Then use the inverse problem to obtain the concentration
+# Average them by depth (just as with the net or OPC) and plot
+
+cfin_TS = -108.3
+
+slope_1_intercept = -23.77
+
+top_50_slope = 0.40
+top_50_intercept = -62.75
+
+all_data_slope = 0.49
+all_data_intercept = -56.86
+
+temp = echo_grouped_sv[,c(1,9,11,14)] %>% 
+  reframe(Depth_Bin = Depth_Bin, Mean_Sv = rowMeans(select(., 2:4), na.rm = TRUE))
+temp$Concentration_1 = 10^(((temp$Mean_Sv + slope_1_intercept)- cfin_TS)/10) # slope fixed at 1
+temp$Concentration_2 = 10^(((top_50_slope * temp$Mean_Sv + top_50_intercept)- cfin_TS)/10) # top 50%
+temp$Concentration_3 = 10^(((all_data_slope * temp$Mean_Sv + all_data_intercept)- cfin_TS)/10) # all data
+temp$Concentration_4 = 10^(((temp$Mean_Sv)- cfin_TS)/10) # no correction
+
+Echo_Concentration = data.frame(Depth = rep(temp$Depth_Bin, times=4), 
+                                Concentration = c(temp$Concentration_1,
+                                                  temp$Concentration_2,
+                                                  temp$Concentration_3,
+                                                  temp$Concentration_4),
+                                Equation = rep(c("1","2","3","No correction"),each=length(temp$Depth)))
+Echo_Concentration$Concentration[is.nan(Echo_Concentration$Concentration)] = 0
+
+GMB_Shallow_Abundance_Plot_Sv = GMB_Shallow_Abundance_Plot +
+  geom_line(data=Echo_Concentration[Echo_Concentration$Equation != "No correction",],aes(x=Depth,y=Concentration,group=Equation,color=Equation, linetype = Equation),linewidth=1) +
+  scale_color_viridis_d(labels=c("Slope = 1","Top 50% of Echo Data","All Echo Data","No Correction")) +
+  scale_linetype(labels=c("Slope = 1","Top 50% of Echo Data","All Echo Data","No Correction")) +
+  theme(legend.position = "none") +
+  theme(text = element_text(size=16),
+        axis.text.x.bottom = element_text(hjust=1, angle=45))
+fname=paste0(figure_dir,"GMB_Shallow_Abundance_Comparison_Sv_Corrected_Only.png")
+ggsave(file=fname,scale=2)
+
+temp = echo_grouped_sv[,c(1,8,13)] %>% 
+  reframe(Depth_Bin = Depth_Bin, Mean_Sv = rowMeans(select(., 2:3), na.rm = TRUE))
+temp$Concentration_1 = 10^(((temp$Mean_Sv + slope_1_intercept)- cfin_TS)/10) # slope fixed at 1
+temp$Concentration_2 = 10^(((top_50_slope * temp$Mean_Sv + top_50_intercept)- cfin_TS)/10) # top 50%
+temp$Concentration_3 = 10^(((all_data_slope * temp$Mean_Sv + all_data_intercept)- cfin_TS)/10) # all data
+temp$Concentration_4 = 10^(((temp$Mean_Sv)- cfin_TS)/10) # no correction
+
+Echo_Concentration = data.frame(Depth = rep(temp$Depth_Bin, times=4), 
+                                Concentration = c(temp$Concentration_1,
+                                                  temp$Concentration_2,
+                                                  temp$Concentration_3,
+                                                  temp$Concentration_4),
+                                Equation = rep(c("1","2","3","No correction"),each=length(temp$Depth)))
+Echo_Concentration$Concentration[is.nan(Echo_Concentration$Concentration)] = 0
+
+GMB_Mid_Abundance_Plot_Sv = GMB_Mid_Abundance_Plot +
+  geom_line(data=Echo_Concentration[Echo_Concentration$Equation != "No correction",],aes(x=Depth,y=Concentration,group=Equation,color=Equation, linetype = Equation),linewidth=1) +
+  scale_color_viridis_d(labels=c("Slope = 1","Top 50% of Echo Data","All Echo Data", "No Correction")) +
+  scale_linetype(labels=c("Slope = 1","Top 50% of Echo Data","All Echo Data","No Correction")) +
+  theme(legend.position = "none") +
+  theme(text = element_text(size=16),
+        axis.text.x.bottom = element_text(hjust=1, angle=45))
+fname=paste0(figure_dir,"GMB_Mid_Abundance_Comparison_Sv_Corrected_Only.png")
+ggsave(file=fname,scale=2)
+
+temp = echo_grouped_sv[,c(1,7,10,12)] %>% 
+  reframe(Depth_Bin = Depth_Bin, Mean_Sv = rowMeans(select(., 2:4), na.rm = TRUE))
+temp$Concentration_1 = 10^(((temp$Mean_Sv + slope_1_intercept)- cfin_TS)/10) # slope fixed at 1
+temp$Concentration_2 = 10^(((top_50_slope * temp$Mean_Sv + top_50_intercept)- cfin_TS)/10) # top 50%
+temp$Concentration_3 = 10^(((all_data_slope * temp$Mean_Sv + all_data_intercept)- cfin_TS)/10) # all data
+temp$Concentration_4 = 10^(((temp$Mean_Sv)- cfin_TS)/10) # no correction
+
+Echo_Concentration = data.frame(Depth = rep(temp$Depth_Bin, times=4), 
+                                Concentration = c(temp$Concentration_1,
+                                                  temp$Concentration_2,
+                                                  temp$Concentration_3,
+                                                  temp$Concentration_4),
+                                Equation = rep(c("1","2","3","No correction"),each=length(temp$Depth)))
+Echo_Concentration$Concentration[is.nan(Echo_Concentration$Concentration)] = 0
+
+GMB_Deep_Abundance_Plot_Sv = GMB_Deep_Abundance_Plot +
+  geom_line(data=Echo_Concentration[Echo_Concentration$Equation != "No correction",],aes(x=Depth,y=Concentration,group=Equation,color=Equation, linetype = Equation),linewidth=1) +
+  scale_color_viridis_d(labels=c("Slope = 1","Top 50% of Echo Data","All Echo Data", "No Correction")) +
+  scale_linetype(labels=c("Slope = 1","Top 50% of Echo Data","All Echo Data","No Correction")) +
+  # theme(legend.position = "none") +
+  theme(text = element_text(size=16),
+        axis.text.x.bottom = element_text(hjust=1, angle=45))
+fname=paste0(figure_dir,"GMB_Deep_Abundance_Comparison_Sv_Corrected_Only.png")
+ggsave(file=fname,scale=2)
+
+cfin_correction_1 = function(sv) {
+  10^(((sv - slope_1_intercept)- cfin_TS)/10)
+}
+
+echo_grouped_sv %>% 
+  select(c(9,11,14,8,13,7,10,12)) %>%
+  mutate(across(1:8, cfin_correction_1)) %>%
+  filter(row_number() >= 17) %>%
+  reframe(sd(as.matrix(.),na.rm=T))
+
+temp = echo_grouped_sv[,c(1,4,17)] %>% 
+  reframe(Depth_Bin = Depth_Bin, Mean_Sv = rowMeans(select(., 2:3), na.rm = TRUE))
+temp$Concentration_1 = 10^(((temp$Mean_Sv + slope_1_intercept)- cfin_TS)/10) # slope fixed at 1
+temp$Concentration_2 = 10^(((top_50_slope * temp$Mean_Sv + top_50_intercept)- cfin_TS)/10) # top 50%
+temp$Concentration_3 = 10^(((all_data_slope * temp$Mean_Sv + all_data_intercept)- cfin_TS)/10) # all data
+temp$Concentration_4 = 10^(((temp$Mean_Sv)- cfin_TS)/10) # no correction
+
+Echo_Concentration = data.frame(Depth = rep(temp$Depth_Bin, times=4), 
+                                Concentration = c(temp$Concentration_1,
+                                                  temp$Concentration_2,
+                                                  temp$Concentration_3,
+                                                  temp$Concentration_4),
+                                Equation = rep(c("1","2","3","No correction"),each=length(temp$Depth)))
+Echo_Concentration$Concentration[is.nan(Echo_Concentration$Concentration)] = 0
+
+OB_Shallow_Abundance_Plot_Sv = OB_Shallow_Abundance_Plot +
+  geom_line(data=Echo_Concentration[Echo_Concentration$Equation != "No correction",],aes(x=Depth,y=Concentration,group=Equation,color=Equation, linetype = Equation),linewidth=1) +
+  scale_color_viridis_d(labels=c("Slope = 1","Top 50% of Echo Data","All Echo Data", "No Correction")) +
+  scale_linetype(labels=c("Slope = 1","Top 50% of Echo Data","All Echo Data","No Correction")) +
+  theme(legend.position = "none") +
+  theme(text = element_text(size=16),
+        axis.text.x.bottom = element_text(hjust=1, angle=45))
+fname=paste0(figure_dir,"OB_Shallow_Abundance_Comparison_Sv_Corrected_Only.png")
+ggsave(file=fname,scale=2)
+
+temp = echo_grouped_sv[,c(1,2,6,15)] %>% 
+  reframe(Depth_Bin = Depth_Bin, Mean_Sv = rowMeans(select(., 2:4), na.rm = TRUE))
+temp$Concentration_1 = 10^(((temp$Mean_Sv + slope_1_intercept)- cfin_TS)/10) # slope fixed at 1
+temp$Concentration_2 = 10^(((top_50_slope * temp$Mean_Sv + top_50_intercept)- cfin_TS)/10) # top 50%
+temp$Concentration_3 = 10^(((all_data_slope * temp$Mean_Sv + all_data_intercept)- cfin_TS)/10) # all data
+temp$Concentration_4 = 10^(((temp$Mean_Sv)- cfin_TS)/10) # no correction
+
+Echo_Concentration = data.frame(Depth = rep(temp$Depth_Bin, times=4), 
+                                Concentration = c(temp$Concentration_1,
+                                                  temp$Concentration_2,
+                                                  temp$Concentration_3,
+                                                  temp$Concentration_4),
+                                Equation = rep(c("1","2","3","No correction"),each=length(temp$Depth)))
+Echo_Concentration$Concentration[is.nan(Echo_Concentration$Concentration)] = 0
+
+OB_Mid_Abundance_Plot_Sv = OB_Mid_Abundance_Plot +
+  geom_line(data=Echo_Concentration[Echo_Concentration$Equation != "No correction",],aes(x=Depth,y=Concentration,group=Equation,color=Equation, linetype = Equation),linewidth=1) +
+  scale_color_viridis_d(labels=c("Slope = 1","Top 50% of Echo Data","All Echo Data", "No Correction")) +
+  scale_linetype(labels=c("Slope = 1","Top 50% of Echo Data","All Echo Data","No Correction")) +
+  theme(legend.position = "none") +
+  theme(text = element_text(size=16),
+        axis.text.x.bottom = element_text(hjust=1, angle=45))
+fname=paste0(figure_dir,"OB_Mid_Abundance_Comparison_Sv_Corrected_Only.png")
+ggsave(file=fname,scale=2)
+
+temp = echo_grouped_sv[,c(1,3,5,16)] %>% 
+  reframe(Depth_Bin = Depth_Bin, Mean_Sv = rowMeans(select(., 2:4), na.rm = TRUE))
+temp$Concentration_1 = 10^(((temp$Mean_Sv + slope_1_intercept)- cfin_TS)/10) # slope fixed at 1
+temp$Concentration_2 = 10^(((top_50_slope * temp$Mean_Sv + top_50_intercept)- cfin_TS)/10) # top 50%
+temp$Concentration_3 = 10^(((all_data_slope * temp$Mean_Sv + all_data_intercept)- cfin_TS)/10) # all data
+temp$Concentration_4 = 10^(((temp$Mean_Sv)- cfin_TS)/10) # no correction
+
+Echo_Concentration = data.frame(Depth = rep(temp$Depth_Bin, times=4), 
+                                Concentration = c(temp$Concentration_1,
+                                                  temp$Concentration_2,
+                                                  temp$Concentration_3,
+                                                  temp$Concentration_4),
+                                Equation = rep(c("1","2","3","No correction"),each=length(temp$Depth)))
+Echo_Concentration$Concentration[is.nan(Echo_Concentration$Concentration)] = 0
+
+OB_Deep_Abundance_Plot_Sv = OB_Deep_Abundance_Plot +
+  geom_line(data=Echo_Concentration[Echo_Concentration$Equation != "No correction",],aes(x=Depth,y=Concentration,group=Equation,color=Equation, linetype = Equation),linewidth=1) +
+  scale_color_viridis_d(labels=c("Slope = 1","Top 50% of Echo Data","All Echo Data", "No Correction")) +
+  scale_linetype(labels=c("Slope = 1","Top 50% of Echo Data","All Echo Data","No Correction")) +
+  # theme(legend.position = "none") +
+  theme(text = element_text(size=16),
+        axis.text.x.bottom = element_text(hjust=1, angle=45))
+fname=paste0(figure_dir,"OB_Deep_Abundance_Comparison_Sv_Corrected_Only.png")
+ggsave(file=fname,scale=2)
+
+echo_grouped_sv %>% 
+  select(c(4,17,2,6,15,3,5,16)) %>%
+  mutate(across(1:8, cfin_correction_1)) %>%
+  filter(row_number() >= 17) %>%
+  reframe(sd(as.matrix(.),na.rm=T))
+
+fig = ggarrange(print(GMB_Shallow_Abundance_Plot_Sv), print(GMB_Mid_Abundance_Plot_Sv), print(GMB_Deep_Abundance_Plot_Sv),
+          labels="AUTO",ncol=3,widths=c(0.9,0.75,1))
+annotate_figure(fig, bottom = textGrob("Concentration (individuals/m^3)",gp = gpar(cex = 1.2),vjust=-1.5))
+ggsave(filename = paste0(figure_dir,"GMB_Abundance_Comparison_Sv_Corrected_Only.png"),width=15,height=8,units="in")
+
+fig = ggarrange(print(OB_Shallow_Abundance_Plot_Sv), print(OB_Mid_Abundance_Plot_Sv), print(OB_Deep_Abundance_Plot_Sv),
+          labels = c("D","E","F"),ncol=3,widths=c(0.9,0.75,1))
+annotate_figure(fig, bottom = textGrob("Concentration (individuals/m^3)",gp = gpar(cex = 1.2),vjust=-1.5))
+ggsave(filename = paste0(figure_dir,"OB_Abundance_Comparison_Sv_Corrected_Only.png"),width=15,height=8,units="in")
+#####
+
+## Bias figure
+
+# Basically need to take the mean echosounder predicted concentration over each net depth
+# and then divide by the actual concentration in each net
+# Plot those ratios and the mean of the log-transformed ratio (and the 95% CI)
+
+# First, averaging the echosounder over the net depths
+
+require(plyr)
+Intervals = Net_Metadata[Net_Metadata$Station_Number %in% c(10,13,17),] %>% 
+  group_by(Net_Num) %>%
+  reframe(depth = round_any(mean(`Pressure_(dbar)`), 5, f = ceiling)) %>% slice(c(1:5))
+detach("package:plyr")
+
+temp = echo_grouped_sv[,c(1,9,11,14)] %>% 
+  reframe(Depth_Bin = Depth_Bin, Mean_Sv = rowMeans(select(., 2:4), na.rm = TRUE))
+temp$Concentration_1 = 10^(((temp$Mean_Sv + slope_1_intercept)- cfin_TS)/10) # slope fixed at 1
+temp$Concentration_2 = 10^(((top_50_slope * temp$Mean_Sv + top_50_intercept)- cfin_TS)/10) # top 50%
+temp$Concentration_3 = 10^(((all_data_slope * temp$Mean_Sv + all_data_intercept)- cfin_TS)/10) # all data
+temp$Concentration_4 = 10^(((temp$Mean_Sv)- cfin_TS)/10) # no correction
+
+Echo_Concentration = data.frame(Depth = rep(temp$Depth_Bin, times=4), 
+                                Concentration = c(temp$Concentration_1,
+                                                  temp$Concentration_2,
+                                                  temp$Concentration_3,
+                                                  temp$Concentration_4),
+                                Equation = rep(c("1","2","3","No correction"),each=length(temp$Depth)))
+Echo_Concentration$Concentration[is.nan(Echo_Concentration$Concentration)] = 0
+Echo_Concentration$Depth = seq(0,195,5)
+
+GMB_Shallow_Sv_Net_Intervals = data.frame()
+
+for(k in 1:5) {
+  if (k == 1) {
+    temp = Echo_Concentration %>%
+      group_by(Equation) %>%
+      filter(Depth >= Intervals$depth[k]) %>%
+      summarise(Sv_Mean = mean(Concentration))
+    GMB_Shallow_Sv_Net_Intervals = cbind(net=Intervals$Net_Num[k]+1,temp,Net_Mean = rep(rev(unique(GMB_Shallow$Net_Concentration))[k+1],each=4))
+  } else {
+    temp = Echo_Concentration %>%
+      group_by(Equation) %>%
+      filter((Depth >= Intervals$depth[k]) & (Depth < Intervals$depth[k-1])) %>%
+      summarise(Sv_Mean = mean(Concentration))
+    GMB_Shallow_Sv_Net_Intervals = rbind(GMB_Shallow_Sv_Net_Intervals,cbind(net=Intervals$Net_Num[k]+1,temp,Net_Mean=rep(rev(unique(GMB_Shallow$Net_Concentration))[k+1],each=4)))
+  }
+}
+GMB_Shallow_Sv_Net_Intervals$Ratio = GMB_Shallow_Sv_Net_Intervals$Sv_Mean/GMB_Shallow_Sv_Net_Intervals$Net_Mean
+
+
+require(plyr)
+Intervals = Net_Metadata[Net_Metadata$Station_Number %in% c(9, 16),] %>% 
+  group_by(Net_Num) %>%
+  reframe(depth = round_any(mean(`Pressure_(dbar)`), 5, f = ceiling)) %>% slice(c(1:5))
+detach("package:plyr")
+
+temp = echo_grouped_sv[,c(1,8,13)] %>% 
+  reframe(Depth_Bin = Depth_Bin, Mean_Sv = rowMeans(select(., 2:3), na.rm = TRUE))
+temp$Concentration_1 = 10^(((temp$Mean_Sv + slope_1_intercept)- cfin_TS)/10) # slope fixed at 1
+temp$Concentration_2 = 10^(((top_50_slope * temp$Mean_Sv + top_50_intercept)- cfin_TS)/10) # top 50%
+temp$Concentration_3 = 10^(((all_data_slope * temp$Mean_Sv + all_data_intercept)- cfin_TS)/10) # all data
+temp$Concentration_4 = 10^(((temp$Mean_Sv)- cfin_TS)/10) # no correction
+
+Echo_Concentration = data.frame(Depth = rep(temp$Depth_Bin, times=4), 
+                                Concentration = c(temp$Concentration_1,
+                                                  temp$Concentration_2,
+                                                  temp$Concentration_3,
+                                                  temp$Concentration_4),
+                                Equation = rep(c("1","2","3","No correction"),each=length(temp$Depth)))
+Echo_Concentration$Concentration[is.nan(Echo_Concentration$Concentration)] = 0
+Echo_Concentration$Depth = seq(0,195,5)
+
+GMB_Mid_Sv_Net_Intervals = data.frame()
+
+for(k in 1:5) {
+  if (k == 1) {
+    temp = Echo_Concentration %>%
+      group_by(Equation) %>%
+      filter(Depth >= Intervals$depth[k]) %>%
+      summarise(Sv_Mean = mean(Concentration))
+    GMB_Mid_Sv_Net_Intervals = cbind(net=Intervals$Net_Num[k]+1,temp,Net_Mean = rep(rev(unique(GMB_Mid$Net_Concentration))[k+1],each=4))
+  } else {
+    temp = Echo_Concentration %>%
+      group_by(Equation) %>%
+      filter((Depth >= Intervals$depth[k]) & (Depth < Intervals$depth[k-1])) %>%
+      summarise(Sv_Mean = mean(Concentration))
+    GMB_Mid_Sv_Net_Intervals = rbind(GMB_Mid_Sv_Net_Intervals,cbind(net=Intervals$Net_Num[k]+1,temp,Net_Mean=rep(rev(unique(GMB_Mid$Net_Concentration))[k+1],each=4)))
+  }
+}
+GMB_Mid_Sv_Net_Intervals$Ratio = GMB_Mid_Sv_Net_Intervals$Sv_Mean/GMB_Mid_Sv_Net_Intervals$Net_Mean
+
+
+require(plyr)
+Intervals = Net_Metadata[Net_Metadata$Station_Number %in% c(8, 12, 15),] %>% 
+  group_by(Net_Num) %>%
+  reframe(depth = round_any(mean(`Pressure_(dbar)`), 5, f = ceiling)) %>% slice(c(1:5))
+detach("package:plyr")
+
+temp = echo_grouped_sv[,c(1,7,10,12)] %>% 
+  reframe(Depth_Bin = Depth_Bin, Mean_Sv = rowMeans(select(., 2:4), na.rm = TRUE))
+temp$Concentration_1 = 10^(((temp$Mean_Sv + slope_1_intercept)- cfin_TS)/10) # slope fixed at 1
+temp$Concentration_2 = 10^(((top_50_slope * temp$Mean_Sv + top_50_intercept)- cfin_TS)/10) # top 50%
+temp$Concentration_3 = 10^(((all_data_slope * temp$Mean_Sv + all_data_intercept)- cfin_TS)/10) # all data
+temp$Concentration_4 = 10^(((temp$Mean_Sv)- cfin_TS)/10) # no correction
+
+Echo_Concentration = data.frame(Depth = rep(temp$Depth_Bin, times=4), 
+                                Concentration = c(temp$Concentration_1,
+                                                  temp$Concentration_2,
+                                                  temp$Concentration_3,
+                                                  temp$Concentration_4),
+                                Equation = rep(c("1","2","3","No correction"),each=length(temp$Depth)))
+Echo_Concentration$Concentration[is.nan(Echo_Concentration$Concentration)] = 0
+Echo_Concentration$Depth = seq(0,195,5)
+
+GMB_Deep_Sv_Net_Intervals = data.frame()
+
+for(k in 1:5) {
+  if (k == 1) {
+    temp = Echo_Concentration %>%
+      group_by(Equation) %>%
+      filter(Depth >= Intervals$depth[k]) %>%
+      summarise(Sv_Mean = mean(Concentration))
+    GMB_Deep_Sv_Net_Intervals = cbind(net=Intervals$Net_Num[k]+1,temp,Net_Mean = rep(rev(unique(GMB_Deep$Net_Concentration))[k+1],each=4))
+  } else {
+    temp = Echo_Concentration %>%
+      group_by(Equation) %>%
+      filter((Depth >= Intervals$depth[k]) & (Depth < Intervals$depth[k-1])) %>%
+      summarise(Sv_Mean = mean(Concentration))
+    GMB_Deep_Sv_Net_Intervals = rbind(GMB_Deep_Sv_Net_Intervals,cbind(net=Intervals$Net_Num[k]+1,temp,Net_Mean=rep(rev(unique(GMB_Deep$Net_Concentration))[k+1],each=4)))
+  }
+}
+GMB_Deep_Sv_Net_Intervals$Ratio = GMB_Deep_Sv_Net_Intervals$Sv_Mean/GMB_Deep_Sv_Net_Intervals$Net_Mean
+
+GMB_Shallow_Sv_Net_Intervals = GMB_Shallow_Sv_Net_Intervals %>% filter(Ratio != Inf & Ratio != 0)
+GMB_Mid_Sv_Net_Intervals = GMB_Mid_Sv_Net_Intervals %>% filter(Ratio != Inf & Ratio != 0)
+GMB_Deep_Sv_Net_Intervals = GMB_Deep_Sv_Net_Intervals %>% filter(Ratio != Inf & Ratio != 0)
+
+# rbind(GMB_Shallow_Sv_Net_Intervals,
+#       GMB_Mid_Sv_Net_Intervals,
+#       GMB_Deep_Sv_Net_Intervals) %>%
+#   filter(Ratio != 0) %>%
+#   reframe(mean(log10(Ratio)), sd(log10(Ratio)))
+
+#####
+require(plyr)
+Intervals = Net_Metadata[Net_Metadata$Station_Number %in% c(5,20),] %>% 
+  group_by(Net_Num) %>%
+  reframe(depth = round_any(mean(`Pressure_(dbar)`), 5, f = ceiling)) %>% slice(c(1:5))
+detach("package:plyr")
+
+temp = echo_grouped_sv[,c(1,4,17)] %>% 
+  reframe(Depth_Bin = Depth_Bin, Mean_Sv = rowMeans(select(., 2:3), na.rm = TRUE))
+temp$Concentration_1 = 10^(((temp$Mean_Sv + slope_1_intercept)- cfin_TS)/10) # slope fixed at 1
+temp$Concentration_2 = 10^(((top_50_slope * temp$Mean_Sv + top_50_intercept)- cfin_TS)/10) # top 50%
+temp$Concentration_3 = 10^(((all_data_slope * temp$Mean_Sv + all_data_intercept)- cfin_TS)/10) # all data
+temp$Concentration_4 = 10^(((temp$Mean_Sv)- cfin_TS)/10) # no correction
+
+Echo_Concentration = data.frame(Depth = rep(temp$Depth_Bin, times=4), 
+                                Concentration = c(temp$Concentration_1,
+                                                  temp$Concentration_2,
+                                                  temp$Concentration_3,
+                                                  temp$Concentration_4),
+                                Equation = rep(c("1","2","3","No correction"),each=length(temp$Depth)))
+Echo_Concentration$Concentration[is.nan(Echo_Concentration$Concentration)] = 0
+Echo_Concentration$Depth = seq(0,195,5)
+
+OB_Shallow_Sv_Net_Intervals = data.frame()
+
+for(k in 1:5) {
+  if (k == 1) {
+    temp = Echo_Concentration %>%
+      group_by(Equation) %>%
+      filter(Depth >= Intervals$depth[k]) %>%
+      summarise(Sv_Mean = mean(Concentration))
+    OB_Shallow_Sv_Net_Intervals = cbind(net=Intervals$Net_Num[k]+1,temp,Net_Mean = rep(rev(unique(OB_Shallow$Net_Concentration))[k+1],each=4))
+  } else {
+    temp = Echo_Concentration %>%
+      group_by(Equation) %>%
+      filter((Depth >= Intervals$depth[k]) & (Depth < Intervals$depth[k-1])) %>%
+      summarise(Sv_Mean = mean(Concentration))
+    OB_Shallow_Sv_Net_Intervals = rbind(OB_Shallow_Sv_Net_Intervals,cbind(net=Intervals$Net_Num[k]+1,temp,Net_Mean=rep(rev(unique(OB_Shallow$Net_Concentration))[k+1],each=4)))
+  }
+}
+OB_Shallow_Sv_Net_Intervals$Ratio = OB_Shallow_Sv_Net_Intervals$Sv_Mean/OB_Shallow_Sv_Net_Intervals$Net_Mean
+
+
+require(plyr)
+Intervals = Net_Metadata[Net_Metadata$Station_Number %in% c(3,7,18),] %>% 
+  group_by(Net_Num) %>%
+  reframe(depth = round_any(mean(`Pressure_(dbar)`), 5, f = ceiling)) %>% slice(c(1:5))
+detach("package:plyr")
+
+temp = echo_grouped_sv[,c(1,2,6,15)] %>% 
+  reframe(Depth_Bin = Depth_Bin, Mean_Sv = rowMeans(select(., 2:4), na.rm = TRUE))
+temp$Concentration_1 = 10^(((temp$Mean_Sv + slope_1_intercept)- cfin_TS)/10) # slope fixed at 1
+temp$Concentration_2 = 10^(((top_50_slope * temp$Mean_Sv + top_50_intercept)- cfin_TS)/10) # top 50%
+temp$Concentration_3 = 10^(((all_data_slope * temp$Mean_Sv + all_data_intercept)- cfin_TS)/10) # all data
+temp$Concentration_4 = 10^(((temp$Mean_Sv)- cfin_TS)/10) # no correction
+
+Echo_Concentration = data.frame(Depth = rep(temp$Depth_Bin, times=4), 
+                                Concentration = c(temp$Concentration_1,
+                                                  temp$Concentration_2,
+                                                  temp$Concentration_3,
+                                                  temp$Concentration_4),
+                                Equation = rep(c("1","2","3","No correction"),each=length(temp$Depth)))
+Echo_Concentration$Concentration[is.nan(Echo_Concentration$Concentration)] = 0
+Echo_Concentration$Depth = seq(0,195,5)
+
+OB_Mid_Sv_Net_Intervals = data.frame()
+
+for(k in 1:5) {
+  if (k == 1) {
+    temp = Echo_Concentration %>%
+      group_by(Equation) %>%
+      filter(Depth >= Intervals$depth[k]) %>%
+      summarise(Sv_Mean = mean(Concentration))
+    OB_Mid_Sv_Net_Intervals = cbind(net=Intervals$Net_Num[k]+1,temp,Net_Mean = rep(rev(unique(OB_Mid$Net_Concentration))[k+1],each=4))
+  } else {
+    temp = Echo_Concentration %>%
+      group_by(Equation) %>%
+      filter((Depth >= Intervals$depth[k]) & (Depth < Intervals$depth[k-1])) %>%
+      summarise(Sv_Mean = mean(Concentration))
+    OB_Mid_Sv_Net_Intervals = rbind(OB_Mid_Sv_Net_Intervals,cbind(net=Intervals$Net_Num[k]+1,temp,Net_Mean=rep(rev(unique(OB_Mid$Net_Concentration))[k+1],each=4)))
+  }
+}
+OB_Mid_Sv_Net_Intervals$Ratio = OB_Mid_Sv_Net_Intervals$Sv_Mean/OB_Mid_Sv_Net_Intervals$Net_Mean
+
+
+require(plyr)
+Intervals = Net_Metadata[Net_Metadata$Station_Number %in% c(4, 6, 19),] %>% 
+  group_by(Net_Num) %>%
+  reframe(depth = round_any(mean(`Pressure_(dbar)`), 5, f = ceiling)) %>% slice(c(1:5))
+detach("package:plyr")
+
+temp = echo_grouped_sv[,c(1,3,5,16)] %>% 
+  reframe(Depth_Bin = Depth_Bin, Mean_Sv = rowMeans(select(., 2:4), na.rm = TRUE))
+temp$Concentration_1 = 10^(((temp$Mean_Sv + slope_1_intercept)- cfin_TS)/10) # slope fixed at 1
+temp$Concentration_2 = 10^(((top_50_slope * temp$Mean_Sv + top_50_intercept)- cfin_TS)/10) # top 50%
+temp$Concentration_3 = 10^(((all_data_slope * temp$Mean_Sv + all_data_intercept)- cfin_TS)/10) # all data
+temp$Concentration_4 = 10^(((temp$Mean_Sv)- cfin_TS)/10) # no correction
+
+Echo_Concentration = data.frame(Depth = rep(temp$Depth_Bin, times=4), 
+                                Concentration = c(temp$Concentration_1,
+                                                  temp$Concentration_2,
+                                                  temp$Concentration_3,
+                                                  temp$Concentration_4),
+                                Equation = rep(c("1","2","3","No correction"),each=length(temp$Depth)))
+Echo_Concentration$Concentration[is.nan(Echo_Concentration$Concentration)] = 0
+Echo_Concentration$Depth = seq(0,195,5)
+
+OB_Deep_Sv_Net_Intervals = data.frame()
+
+for(k in 1:5) {
+  if (k == 1) {
+    temp = Echo_Concentration %>%
+      group_by(Equation) %>%
+      filter(Depth >= Intervals$depth[k]) %>%
+      summarise(Sv_Mean = mean(Concentration))
+    OB_Deep_Sv_Net_Intervals = cbind(net=Intervals$Net_Num[k]+1,temp,Net_Mean = rep(rev(unique(OB_Deep$Net_Concentration))[k+1],each=4))
+  } else {
+    temp = Echo_Concentration %>%
+      group_by(Equation) %>%
+      filter((Depth >= Intervals$depth[k]) & (Depth < Intervals$depth[k-1])) %>%
+      summarise(Sv_Mean = mean(Concentration))
+    OB_Deep_Sv_Net_Intervals = rbind(OB_Deep_Sv_Net_Intervals,cbind(net=Intervals$Net_Num[k]+1,temp,Net_Mean=rep(rev(unique(OB_Deep$Net_Concentration))[k+1],each=4)))
+  }
+}
+OB_Deep_Sv_Net_Intervals$Ratio = OB_Deep_Sv_Net_Intervals$Sv_Mean/OB_Deep_Sv_Net_Intervals$Net_Mean
+
+OB_Shallow_Sv_Net_Intervals = OB_Shallow_Sv_Net_Intervals %>% filter(Ratio != Inf & Ratio !=0)
+OB_Mid_Sv_Net_Intervals = OB_Mid_Sv_Net_Intervals %>% filter(Ratio != Inf & Ratio !=0)
+OB_Deep_Sv_Net_Intervals = OB_Deep_Sv_Net_Intervals %>% filter(Ratio != Inf & Ratio !=0)
+
+#####
+## Putting the bias figure together
+
+GMB_Sv_Net_Intervals = cbind(rbind(GMB_Shallow_Sv_Net_Intervals, GMB_Mid_Sv_Net_Intervals, GMB_Deep_Sv_Net_Intervals), Basin = "Grand Manan Basin")
+OB_Sv_Net_Intervals = cbind(rbind(OB_Shallow_Sv_Net_Intervals, OB_Mid_Sv_Net_Intervals, OB_Deep_Sv_Net_Intervals), Basin = "Owen Basin")
+
+Sv_Net_Intervals = rbind(GMB_Sv_Net_Intervals, OB_Sv_Net_Intervals)
+
+# Individual ratios
+plot1 = ggplot() +
+  geom_point(data=Sv_Net_Intervals,aes(x=as.factor(Equation),
+                                       y=Ratio, 
+                                       shape=as.factor(net), color=as.factor(net)),
+             position=position_jitter(width=0.1,height=0,seed=1),
+             size = 3) +
+  scale_shape_discrete(limits = c("1","2","3","4","5"),
+                       drop = F,
+                       labels = c("1","2","3","4","5")) +
+  scale_y_log10(limits=c(0.03,10000),
+                name="Predicted C5 Abundance /\nActual C5 Abundance") +
+  theme_bw() +
+  coord_cartesian(xlim=c(0.5,4.5)) +
+  scale_x_discrete(position = "top",
+                   limits = c("1","2","3","No correction"),
+                   drop = T,
+                   labels = c("Slope = 1","Top 50%\nof Echo Data","All Echo Data","No Correction")) +
+  scale_color_viridis_d(begin=0.5,
+                        limits = c("1","2","3","4","5"),
+                        drop = F,
+                        labels = c("1","2","3","4","5")) +
+  theme(axis.title.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.x = element_text(size=10),
+        panel.grid.major.x = element_blank(),
+        text = element_text(size=16)) +
+  labs(shape="Net",color="Net") +
+  facet_wrap(~Basin, nrow = 2)
+
+# Mean/SD of log-transformed ratios
+
+Sv_Net_Intervals_1 = Sv_Net_Intervals %>%
+  filter(Ratio != 0) %>%
+  group_by(Basin) %>%
+  reframe(Ratio_Mean = mean(log10(Ratio)), Ratio_SD = sd(log10(Ratio))) %>%
+  mutate(Method = "Overall")
+
+Sv_Net_Intervals_2 = Sv_Net_Intervals %>%
+  filter(Ratio != 0) %>%
+  filter(Equation != "No correction") %>%
+  group_by(Basin) %>%
+  reframe(Ratio_Mean = mean(log10(Ratio)), Ratio_SD = sd(log10(Ratio))) %>%
+  mutate(Method = "Corrected Only")
+
+Sv_Net_Intervals_Log10 = rbind(Sv_Net_Intervals_1, Sv_Net_Intervals_2)
+
+plot2 = ggplot() +
+  geom_point(data = Sv_Net_Intervals_Log10, aes(x = Method, y = Ratio_Mean, color = Method, group = Method),
+             size=3) +
+  scale_color_manual(values = c("blue", "red"), guide = "none") +
+  geom_errorbar(data = Sv_Net_Intervals_Log10, 
+                aes(x = Method, ymin = Ratio_Mean - Ratio_SD, ymax = Ratio_Mean + Ratio_SD),
+                width = 0.1,
+                linewidth = 0.75) +
+  theme_bw() +
+  scale_x_discrete(position = "top",
+                   limits = c("Overall", "Corrected Only"),
+                   drop = F,
+                   labels = c("Overall Mean and SD", "Corrected Mean and SD")) +
+  scale_y_continuous(limits = c(-1, 2),
+    name="log10(Predicted C5 Abundance /\nActual C5 Abundance)") +
+  theme(axis.title.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.x = element_text(size=10),
+        panel.grid.major.x = element_blank(),
+        text = element_text(size=16)) +
+  facet_wrap(~Basin, nrow = 2)
+  
+
+ggarrange(plot1, plot2, ncol = 2, common.legend = F, legend = "bottom", labels="AUTO") +
+  theme(plot.background = element_rect(fill = 'white',color='white'))
+ggsave(paste0(figure_dir, "Both_Basins_Concentration_Ratio.png"),height=8,width=12,units="in")
+
+#####
+
+## Histogram of missed echoes
+
+Missed_Echoes = read.csv(paste0(data_dir,'Spreadsheets/Missed_Echoes.csv'),header=F)
+
+Missed_Echoes_GMB = Missed_Echoes %>% 
+  filter(V2 == "GMB") %>% 
+  select(V3:V25) %>%
+  gather()
+Missed_Echoes_GMB$key = rep(c("10m","5m"),times=23)
+
+Missed_Echoes_GMB_Plot = ggplot() +
+  geom_histogram(data=Missed_Echoes_GMB,breaks=seq(0,100,10),aes(x=value,group=key,fill=key),position=position_dodge2(preserve="single")) +
+  scale_fill_viridis_d(begin=0.5) +
+  theme_bw() +
+  labs(x=element_blank(),y="# Dives",fill="Distance from Seafloor") +
+  theme(text = element_text(size=16),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())
+ggsave(paste0(figure_dir,"Missed_Echoes_GMB.png"))
+
+Missed_Echoes_GMB %>% group_by(key) %>% reframe(median(value))
+
+Missed_Echoes_OB = Missed_Echoes %>% 
+  filter(V2 == "OB") %>% 
+  select(V3:V25) %>%
+  gather()
+Missed_Echoes_OB$key = rep(c("10m","5m"),times=23)
+
+Missed_Echoes_OB_Plot = ggplot() +
+  geom_histogram(data=Missed_Echoes_OB,breaks=seq(0,100,10),aes(x=value,group=key,fill=key),position=position_dodge2(preserve="single")) +
+  scale_fill_viridis_d(begin=0.5) +
+  theme_bw() +
+  labs(x="Percentage of Volume Backscatter Near Seafloor",y="# Dives",fill="Distance from Seafloor") +
+  theme(text = element_text(size=16))
+ggsave(paste0(figure_dir,"Missed_Echoes_OB.png"))
+
+Missed_Echoes_OB %>% group_by(key) %>% reframe(median(value))
+
+ggarrange(Missed_Echoes_GMB_Plot,Missed_Echoes_OB_Plot,ncol=1,common.legend = T,legend="right",labels="AUTO") + 
+  theme(plot.background = element_rect(fill = 'white',color='white'))
+ggsave(paste0(figure_dir,"Missed_Echoes_GMB_OB.png"),width=8,height=6,units="in")
+
+Missed_Echoes = cbind(depth = rep(c("5m","10m"),each=46), rbind(Missed_Echoes_5m,Missed_Echoes_10m))
+
+ggplot() +
+  geom_histogram(data=Missed_Echoes,binwidth=10, aes(x=value,group=depth,fill=depth),position=position_dodge2(padding=0.2)) +
+  scale_fill_viridis_d(begin=0.2, end=0.5) +
+  scale_x_continuous(breaks=seq(0,100,20)) +
+  theme_bw() +
+  labs(x="Percentage of Missed Echoes",y="Count",fill="Cutoff Depth")
+ggsave(paste0(figure_dir,"Missed_Echoes_Combined.png"))

@@ -1,9 +1,9 @@
-# Last updated: 12 July 2023
+# Last updated: 28 Aug 2023
 
 #####
 rm(list = ls())
 
-setwd("C:/Users/dmossman/Box/2022 MSc Thesis Work/")
+setwd("C:/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/")
 
 ## Libraries
 
@@ -17,21 +17,17 @@ library(emmeans)
 library(modelr)
 library(ggpubr)
 library(pracma)
+library(lmodel2)
 
 ## Project Structure
 sourceDirectory('Code/Hansen Zooplankton Code and Sample Data/src',
                 modifiedOnly = F)
 
 function_dir = 'Code/Hansen Zooplankton Code and Sample Data/src/'
-create_dir(function_dir)
 processed_dir = 'Processed_Data/'
-create_dir(processed_dir)
 data_dir = 'Raw_Data/'
-create_dir(data_dir)
 figure_dir = 'Visuals/'
-create_dir(figure_dir)
 report_dir = getwd()
-create_dir(report_dir)
 
 #####
 
@@ -55,7 +51,8 @@ multi_ldf = lapply(multi_filenames, read.table)
 remove_outliers = function(x,var) {
   qnt = quantile(unlist(x[var]), probs=c(.25, .75), na.rm = T)
   H = 1.5 * IQR(unlist(x[var]), na.rm = T)
-  x %>% filter(!(x[var] <= (qnt[1] - H) | x[var] >= (qnt[2] + H)))
+  x = x %>% filter(!(x[var] <= (qnt[1] - H) | x[var] >= (qnt[2] + H)))
+  return(x)
 }
 
 #####
@@ -63,12 +60,10 @@ remove_outliers = function(x,var) {
 ## CORRELATION
 
 require(plyr)
-
 corfun<-function(x, y) {
   corr=(cor.test(x, y,
                  alternative="two.sided", method="pearson"))
 }
-
 detach("package:plyr")
 
 ## Correlating Multi_Sv and Echo_Sv
@@ -185,7 +180,7 @@ correlation_masked_sv = data.frame(
   rep(basin_list, times = 4),
   rep(rep(levels(Net_Data$station), each = 5), times = 4),
   rep(
-    c("130kHz", "200kHz-130kHz", "455kHz-200kHz", "769kHz-455kHz"),
+    c("130kHz", "200kHz", "455kHz", "769kHz"),
     each = length(multi_ldf) * 5
   ),
   rep(colnames(multi_ldf[[1]]), times = length(multi_ldf) * 4),
@@ -194,7 +189,7 @@ correlation_masked_sv = data.frame(
   10 * log10(temp4)
 )
 #rm(temp1, temp2)
-colnames(correlation_masked_sv) = c("Basin", "Station", "Frequency_Diff", "Net", "Community_Comp", "Multi_Sv", "Echo_Masked_Sv")
+colnames(correlation_masked_sv) = c("Basin", "Station", "Frequency", "Net", "Community_Comp", "Multi_Sv", "Echo_Masked_Sv")
 correlation_masked_sv[correlation_masked_sv$Echo_Masked_Sv == -Inf,7] = NA
 
 for(i in 1:nrow(correlation_masked_sv)) {
@@ -205,11 +200,12 @@ for(i in 1:nrow(correlation_masked_sv)) {
 }
 
 correlation_masked_sv = correlation_masked_sv %>%
-  group_by(Frequency_Diff) %>%
+  group_by(Frequency) %>%
+  do(remove_outliers(.,"Echo_Masked_Sv")) %>%
   do(remove_outliers(.,"Echo_Masked_Sv"))
 
-echo_masked_plot = ggplot(data = correlation_masked_sv, aes(x = Echo_Masked_Sv, y = Multi_Sv, shape = Frequency_Diff, color = Frequency_Diff)) +
-  geom_point(na.rm = TRUE, aes(group = Frequency_Diff)) +
+echo_masked_plot = ggplot(data = correlation_masked_sv, aes(x = Echo_Masked_Sv, y = Multi_Sv, shape = Frequency, color = Frequency)) +
+  geom_point(na.rm = TRUE, aes(group = Frequency),size=1) +
   geom_abline(slope = 1, intercept= 0) +
   scale_color_viridis_d(begin = 0.2, end = 0.9) +
   geom_smooth(method = "lm", se = FALSE) +
@@ -218,7 +214,10 @@ echo_masked_plot = ggplot(data = correlation_masked_sv, aes(x = Echo_Masked_Sv, 
   #   aes(label = ..rr.label..),
   #   show.legend = F) +
   theme_bw() + theme(text = element_text(size = 16)) +
-  labs(x = "Sv(echo) (dB)", y = "Sv(net) (dB)", shape = "Differenced Frequencies", color = "Differenced Frequencies")
+  geom_text(inherit.aes = F, x = -35, y = -57, label = "Full Model", color = "black", fontface = "bold", size = 6) +
+  coord_cartesian(xlim = c(-95,-25), ylim = c(-140, -55)) +
+  theme_bw() + theme(text = element_text(size = 16)) +
+  labs(x = "Masked Sv(echo) (dB)", y = "Sv(full) (dB)", shape = "Frequency", color = "Frequency")
 
 ggsave(filename = paste0(figure_dir, "Multi_Echo_Sv_Masked_Correlation.png"),scale=2)
 
@@ -230,7 +229,7 @@ ddply(correlation_masked_sv, .(Basin), summarise,
       r2=(corfun(Multi_Sv,Echo_Masked_Sv)$estimate)^2,
       alt=corfun(Multi_Sv,Echo_Masked_Sv)$alternative
 )
-ddply(correlation_masked_sv, .(Basin, Frequency_Diff), summarise,
+ddply(correlation_masked_sv, .(Basin, Frequency), summarise,
       z=corfun(Multi_Sv,Echo_Masked_Sv)$statistic,
       pval=corfun(Multi_Sv,Echo_Masked_Sv)$p.value,
       r2=(corfun(Multi_Sv,Echo_Masked_Sv)$estimate)^2,
@@ -242,21 +241,21 @@ ddply(correlation_masked_sv, .(Community_Comp), summarise,
       r2=(corfun(Multi_Sv,Echo_Masked_Sv)$estimate)^2,
       alt=corfun(Multi_Sv,Echo_Masked_Sv)$alternative
 )
-ddply(correlation_masked_sv, .(Frequency_Diff, Community_Comp), summarise,
+ddply(correlation_masked_sv, .(Frequency, Community_Comp), summarise,
       z=corfun(Multi_Sv,Echo_Masked_Sv)$statistic,
       pval=corfun(Multi_Sv,Echo_Masked_Sv)$p.value,
       r2=(corfun(Multi_Sv,Echo_Masked_Sv)$estimate)^2,
       alt=corfun(Multi_Sv,Echo_Masked_Sv)$alternative
 )
 
-ddply(correlation_masked_sv, .(Frequency_Diff), summarise,
+ddply(correlation_masked_sv, .(Frequency), summarise,
       z=corfun(Multi_Sv,Echo_Masked_Sv)$statistic,
       pval=corfun(Multi_Sv,Echo_Masked_Sv)$p.value,
       r2=(corfun(Multi_Sv,Echo_Masked_Sv)$estimate)^2,
       alt=corfun(Multi_Sv,Echo_Masked_Sv)$alternative
 )
 
-values3 = ddply(correlation_masked_sv, .(Frequency_Diff, Community_Comp), summarise,
+values3 = ddply(correlation_masked_sv, .(Frequency, Community_Comp), summarise,
                 z=corfun(Multi_Sv,Echo_Masked_Sv)$statistic,
                 pval=corfun(Multi_Sv,Echo_Masked_Sv)$p.value,
                 r2=(corfun(Multi_Sv,Echo_Masked_Sv)$estimate)^2,
@@ -265,13 +264,13 @@ values3 = ddply(correlation_masked_sv, .(Frequency_Diff, Community_Comp), summar
 
 detach("package:plyr")
 
-result = manova(cbind(Multi_Sv, Echo_Masked_Sv) ~ Frequency_Diff * Community_Comp,
+result = manova(cbind(Multi_Sv, Echo_Masked_Sv) ~ Frequency * Community_Comp,
                 data = correlation_masked_sv)
 summary(result)
 (summary.aov(result)[[" Response Multi_Sv"]])
 (summary.aov(result)[[" Response Echo_Masked_Sv"]])
 
-models = correlation_masked_sv %>% group_by(Frequency_Diff) %>% do(model = summary(lm(Multi_Sv ~ Echo_Masked_Sv, data = .)))
+models = correlation_masked_sv %>% group_by(Community_Comp, Frequency) %>% do(model = summary(lm(Multi_Sv ~ Echo_Masked_Sv, data = .)))
 
 for(i in 1:length(models$model)){
   print(paste0(models[[1]][i], ": "))
@@ -283,10 +282,11 @@ for(i in 1:length(models$model)){
                                lower.tail = FALSE)))
 }
 
-models = correlation_masked_sv %>% group_by(Frequency_Diff) %>% do(model = (lm(Multi_Sv ~ Echo_Masked_Sv, data = .)))
+models = correlation_masked_sv %>% group_by(Community_Comp, Frequency) %>% do(model = (lm(Multi_Sv ~ Echo_Masked_Sv, data = .)))
 
 for(i in 1:length(models$model)) {
-  print(paste0(models[[1]][i], " RMSE: ", round(rmse(models$model[[i]], data = correlation_masked_sv), digits = 2)))
+  x = residuals(models$model[[i]])
+  print(paste0(models[[1]][i], " RMSE: ", round(sqrt(mean(x^2,na.rm=T)), digits = 2)))
 }
 
 #####
@@ -318,14 +318,14 @@ temp6 = as.matrix(c(temp2[1:80], temp6))
 
 correlation_copepod = data.frame(rep(basin_list, times = 4),
   rep(rep(levels(Net_Data$station), each = 5), times = 4),
-  rep(c("130kHz", "200kHz-130kHz","455kHz-200kHz","769kHz-455kHz"), each = length(copepod_ldf) * 5),
+  rep(c("130kHz", "200kHz","455kHz","769kHz"), each = length(copepod_ldf) * 5),
   rep(colnames(copepod_ldf[[1]]), times = length(copepod_ldf) * 4),
   NA,
   10 * log10(temp5),
   10 * log10(temp6),
   10 * log10(temp2))
 # rm(temp1, temp2, temp3)"
-colnames(correlation_copepod) = c("Basin", "Station", "Frequency_Diff", "Net", "Community_Comp", "Copepod_Sv", "Echo_Masked_Sv", "Echo_Sv")
+colnames(correlation_copepod) = c("Basin", "Station", "Frequency", "Net", "Community_Comp", "Copepod_Sv", "Echo_Masked_Sv", "Echo_Sv")
 correlation_copepod[correlation_copepod$Echo_Masked_Sv == -Inf,7] = NA
 
 for(i in 1:nrow(correlation_copepod)) {
@@ -336,13 +336,14 @@ for(i in 1:nrow(correlation_copepod)) {
 }
 
 correlation_copepod = correlation_copepod %>%
-  group_by(Frequency_Diff) %>%
+  group_by(Frequency) %>%
+  do(remove_outliers(.,"Echo_Masked_Sv")) %>%
   do(remove_outliers(.,"Echo_Masked_Sv"))
 
 # Plots
 
-copepod_plot = ggplot(data = correlation_copepod, aes(x = Echo_Masked_Sv, y = Copepod_Sv, shape = Frequency_Diff, color = Frequency_Diff)) +
-  geom_point(na.rm = TRUE, aes(group = Frequency_Diff)) +
+copepod_plot = ggplot(data = correlation_copepod, aes(x = Echo_Masked_Sv, y = Copepod_Sv, shape = Frequency, color = Frequency)) +
+  geom_point(na.rm = TRUE, aes(group = Frequency),size=1) +
   geom_abline(slope = 1, intercept = 0) +
   scale_color_viridis_d(begin = 0.2, end = 0.9) +
   geom_smooth(method = "lm", se = FALSE) +
@@ -350,8 +351,10 @@ copepod_plot = ggplot(data = correlation_copepod, aes(x = Echo_Masked_Sv, y = Co
   #                       label.y = c(-120, -111, -103, -92),
   #                       aes(label = ..rr.label..),
   #                       show.legend = F) +
+  geom_text(inherit.aes = F, x = -40, y = -87, label = "Copepod Model", color = "black", fontface = "bold", size = 6) +
+  coord_cartesian(xlim = c(-95,-25), ylim = c(-140, -85)) +
   theme_bw() + theme(text = element_text(size = 16)) +
-  labs(x = "Sv(echo) (dB)", y = "Sv(copepod) (dB)", shape = "Differenced Frequencies", color = "Differenced Frequencies")
+  labs(x = "Masked Sv(echo) (dB)", y = "Sv(cop) (dB)", shape = "Frequency", color = "Frequency")
 
 ggsave(filename = paste0(figure_dir, "Copepod_Echo_Sv_Masked_Correlation_Freq_Only.png"),scale=2)
 
@@ -363,13 +366,13 @@ ddply(correlation_copepod, .(Basin), summarise,
       r2=(corfun(Copepod_Sv,Echo_Masked_Sv)$estimate)^2,
       alt=corfun(Copepod_Sv,Echo_Masked_Sv)$alternative
 )
-ddply(correlation_copepod, .(Frequency_Diff), summarise,
+ddply(correlation_copepod, .(Frequency), summarise,
       z=corfun(Copepod_Sv,Echo_Masked_Sv)$statistic,
       pval=corfun(Copepod_Sv,Echo_Masked_Sv)$p.value,
       r2=(corfun(Copepod_Sv,Echo_Masked_Sv)$estimate)^2,
       alt=corfun(Copepod_Sv,Echo_Masked_Sv)$alternative
 )
-ddply(correlation_copepod, .(Basin, Frequency_Diff), summarise,
+ddply(correlation_copepod, .(Basin, Frequency), summarise,
       z=corfun(Copepod_Sv,Echo_Masked_Sv)$statistic,
       pval=corfun(Copepod_Sv,Echo_Masked_Sv)$p.value,
       r2=(corfun(Copepod_Sv,Echo_Masked_Sv)$estimate)^2,
@@ -381,7 +384,7 @@ ddply(correlation_copepod, .(Community_Comp), summarise,
       r2=(corfun(Copepod_Sv,Echo_Masked_Sv)$estimate)^2,
       alt=corfun(Copepod_Sv,Echo_Masked_Sv)$alternative
 )
-ddply(correlation_copepod, .(Frequency_Diff, Community_Comp), summarise,
+ddply(correlation_copepod, .(Frequency, Community_Comp), summarise,
       z=corfun(Copepod_Sv,Echo_Masked_Sv)$statistic,
       pval=corfun(Copepod_Sv,Echo_Masked_Sv)$p.value,
       r2=(corfun(Copepod_Sv,Echo_Masked_Sv)$estimate)^2,
@@ -389,13 +392,13 @@ ddply(correlation_copepod, .(Frequency_Diff, Community_Comp), summarise,
 )
 detach("package:plyr")
 
-result = manova(cbind(Copepod_Sv, Echo_Masked_Sv) ~ Frequency_Diff * Community_Comp,
+result = manova(cbind(Copepod_Sv, Echo_Masked_Sv) ~ Frequency * Community_Comp,
                 data = correlation_copepod)
 summary(result)
 (summary.aov(result)[[" Response Copepod_Sv"]])
 (summary.aov(result)[[" Response Echo_Masked_Sv"]])
 
-models = correlation_copepod %>% group_by(Frequency_Diff) %>% do(model = summary(lm(Copepod_Sv ~ Echo_Masked_Sv, data = .)))
+models = correlation_copepod %>% group_by(Frequency) %>% do(model = summary(lm(Copepod_Sv ~ Echo_Sv, data = .)))
 
 for(i in 1:length(models$model)){
   print(paste0(models[[1]][i], ": "))
@@ -407,10 +410,11 @@ for(i in 1:length(models$model)){
      lower.tail = FALSE), digits = 2)))
 }
 
-models = correlation_copepod %>% group_by(Frequency_Diff) %>% do(model = (lm(Copepod_Sv ~ Echo_Masked_Sv, data = .)))
+models = correlation_copepod %>% group_by(Frequency) %>% do(model = (lm(Copepod_Sv ~ Echo_Sv, data = .)))
 
 for(i in 1:length(models$model)) {
-  print(paste0(models[[1]][i], " RMSE: ", round(rmse(models$model[[i]], data = correlation_copepod), digits = 2)))
+  x = residuals(models$model[[i]])
+  print(paste0(models[[1]][i], " RMSE: ", round(sqrt(mean(x^2,na.rm=T)), digits = 2)))
 }
 
 #####
@@ -438,13 +442,13 @@ temp10 = as.matrix(c(temp2[1:80], temp10))
 
 correlation_cfin = data.frame(rep(basin_list, times = 4),
   rep(rep(levels(Net_Data$station), each = 5), times = 4),
-  rep(c("130kHz","200kHz-130kHz","455kHz-200kHz","769kHz-455kHz"), each = length(cfin_ldf) * 5),
+  rep(c("130kHz","200kHz","455kHz","769kHz"), each = length(cfin_ldf) * 5),
   rep(colnames(cfin_ldf[[1]]), times = length(cfin_ldf) * 4),
   NA,
   10 * log10(temp9),
   10 * log10(temp10))
 # rm(temp1, temp2, temp3)
-colnames(correlation_cfin) = c("Basin", "Station", "Frequency_Diff", "Net", "Community_Comp", "Cfin_Sv", "Echo_Masked_Sv")
+colnames(correlation_cfin) = c("Basin", "Station", "Frequency", "Net", "Community_Comp", "Cfin_Sv", "Echo_Masked_Sv")
 correlation_cfin[correlation_cfin$Echo_Masked_Sv == -Inf,7] = NA
 
 for(i in 1:nrow(correlation_cfin)) {
@@ -455,22 +459,27 @@ for(i in 1:nrow(correlation_cfin)) {
 }
 
 correlation_cfin = correlation_cfin %>%
-  group_by(Frequency_Diff) %>%
+  group_by(Frequency) %>%
+  do(remove_outliers(.,"Echo_Masked_Sv")) %>%
   do(remove_outliers(.,"Echo_Masked_Sv"))
-
 # Plot
 
-cfin_plot = ggplot(data = correlation_cfin, aes(x = Echo_Masked_Sv, y = Cfin_Sv, shape = Frequency_Diff, color = Frequency_Diff)) +
-  geom_point(na.rm = TRUE, aes(group = Frequency_Diff), size = 1) +
+cfin_plot = ggplot(data = correlation_cfin, aes(x = Echo_Masked_Sv, y = Cfin_Sv, shape = Frequency, color = Frequency)) +
+  geom_point(na.rm = TRUE, aes(group = Frequency), size = 1) +
   geom_abline(slope = 1, intercept = 0) +
   scale_color_viridis_d(begin = 0.2, end = 0.9) +
   geom_smooth(method = "lm", se = FALSE, linewidth = 1) +
   theme_bw() + theme(text = element_text(size = 16)) +
-  # stat_regline_equation(label.x = c(-70, -71, -75, -65),
-  #                       label.y = c(-120, -111, -97, -87),
-  #                       aes(label = ..rr.label..),
+  # stat_regline_equation(label.x = c(-70, -71, -79, -65),
+  #                       label.y = c(-120, -111, -90, -75),
+  #                       aes(label = after_stat(eq.label)),
   #                       show.legend = F) +
-  labs(x = "Sv(echo) (dB)", y = "Sv(cfin) (dB)", shape = "Differenced Frequencies", color = "Differenced Frequencies")
+  # geom_abline(intercept = -9.43,slope=1, linewidth = 1) +
+  # geom_text(aes(x=-50,y=-65,label="y = -9.43 + x"),color="black") +
+  geom_text(inherit.aes = F, x = -37, y = -65, label = "C. Fin Model", color = "black", fontface = "bold", size = 6) +
+  coord_cartesian(xlim = c(-95,-25), ylim = c(-125, -65)) +
+  theme_bw() + theme(text = element_text(size = 16)) +
+  labs(x = "Masked Sv(echo) (dB)", y = "Sv(cfin) (dB)", shape = "Frequency", color = "Frequency")
 
 ggsave(filename = paste0(figure_dir, "Cfin_Echo_Sv_Masked_Correlation_Freq_Only.png"),scale=2)
 
@@ -482,13 +491,13 @@ ddply(correlation_cfin, .(Basin), summarise,
       r2=(corfun(Cfin_Sv,Echo_Masked_Sv)$estimate)^2,
       alt=corfun(Cfin_Sv,Echo_Masked_Sv)$alternative
 )
-ddply(correlation_cfin, .(Frequency_Diff), summarise,
+ddply(correlation_cfin, .(Frequency), summarise,
       z=corfun(Cfin_Sv,Echo_Masked_Sv)$statistic,
       pval=corfun(Cfin_Sv,Echo_Masked_Sv)$p.value,
       r2=(corfun(Cfin_Sv,Echo_Masked_Sv)$estimate)^2,
       alt=corfun(Cfin_Sv,Echo_Masked_Sv)$alternative
 )
-ddply(correlation_cfin, .(Basin, Frequency_Diff), summarise,
+ddply(correlation_cfin, .(Basin, Frequency), summarise,
       z=corfun(Cfin_Sv,Echo_Masked_Sv)$statistic,
       pval=corfun(Cfin_Sv,Echo_Masked_Sv)$p.value,
       r2=(corfun(Cfin_Sv,Echo_Masked_Sv)$estimate)^2,
@@ -500,7 +509,7 @@ ddply(correlation_cfin, .(Community_Comp), summarise,
       r2=(corfun(Cfin_Sv,Echo_Masked_Sv)$estimate)^2,
       alt=corfun(Cfin_Sv,Echo_Masked_Sv)$alternative
 )
-ddply(correlation_cfin, .(Frequency_Diff, Community_Comp), summarise,
+ddply(correlation_cfin, .(Frequency, Community_Comp), summarise,
       z=corfun(Cfin_Sv,Echo_Masked_Sv)$statistic,
       pval=corfun(Cfin_Sv,Echo_Masked_Sv)$p.value,
       r2=(corfun(Cfin_Sv,Echo_Masked_Sv)$estimate)^2,
@@ -508,13 +517,16 @@ ddply(correlation_cfin, .(Frequency_Diff, Community_Comp), summarise,
 )
 detach("package:plyr")
 
-result = manova(cbind(Cfin_Sv, Echo_Masked_Sv) ~ Frequency_Diff * Community_Comp,
+result = manova(cbind(Cfin_Sv, Echo_Masked_Sv) ~ Frequency * Community_Comp,
                 data = correlation_cfin)
 summary(result)
 (summary.aov(result)[[" Response Cfin_Sv"]])
 (summary.aov(result)[[" Response Echo_Masked_Sv"]])
 
-models = correlation_cfin %>% group_by(Community_Comp, Frequency_Diff) %>% do(model = summary(lm(Cfin_Sv ~ Echo_Masked_Sv, data = .)))
+models = correlation_cfin %>% 
+  group_by(Frequency) %>%
+  filter(Echo_Masked_Sv > median(Echo_Masked_Sv)) %>%
+  do(model = summary(lm(Cfin_Sv ~ Echo_Masked_Sv, data = .)))
 
 for(i in 1:length(models$model)){
   print(paste0(models[[1]][i], ": "))
@@ -526,16 +538,93 @@ for(i in 1:length(models$model)){
                                       lower.tail = FALSE), digits = 2)))
 }
 
-models = correlation_cfin %>% group_by(Community_Comp, Frequency_Diff) %>% do(model = (lm(Cfin_Sv ~ Echo_Masked_Sv, data = .)))
+models = correlation_cfin %>% 
+  ungroup() %>%
+  group_by(Basin, Frequency) %>% 
+  # filter(Echo_Masked_Sv > median(Echo_Masked_Sv)) %>%
+  do(model = (lm(Cfin_Sv ~ Echo_Masked_Sv, data = .))) %>%
+  ungroup()
 
 for(i in 1:length(models$model)) {
-  print(paste0(models[[1]][i], " RMSE: ", round(rmse(models$model[[i]], data = correlation_cfin), digits = 2)))
+  x = residuals(models$model[[i]])
+  print(paste0(models[[1]][i], " RMSE: ", round(sqrt(mean(x^2,na.rm=T)), digits = 2)))
 }
+
+# Potentially force linear model slope to be 1, in order to deal with the OLS...
+# weirdness? If slope = 1, then intercept = mean(y - x)
+#####
+## Residual plots
+
+plot(fitted(models[[2]][[1]]),resid(models[[2]][[1]]))
+abline(0,0)
+
+plot(fitted(models[[2]][[2]]),resid(models[[2]][[2]]))
+abline(0,0)
+
+plot(fitted(models[[2]][[3]]),resid(models[[2]][[3]]))
+abline(0,0)
+
+plot(fitted(models[[2]][[4]]),resid(models[[2]][[4]]))
+abline(0,0)
+
+test = data.frame(Echo_Masked_Sv = correlation_cfin$Echo_Masked_Sv[correlation_cfin$Frequency == "455kHz"],
+                  Observed = correlation_cfin$Cfin_Sv[correlation_cfin$Frequency == "455kHz"])
+test = test[!is.na(test$Observed),]
+# test = test[-56,]
+# test = test %>% filter(Echo_Masked_Sv < -75.07882)
+
+intercept = mean(test$Observed - test$Echo_Masked_Sv)
+
+test$Predicted = intercept + test$Echo_Masked_Sv
+test$Residuals = test$Observed - test$Predicted
+
+test_mean = mean(test$Observed,na.rm=T)
+
+test_SS_reg = sum((test$Predicted - test_mean)^2)
+test_SS_err = sum((test$Observed - test$Predicted)^2)
+test_SS_total = test_SS_reg + test_SS_err
+
+1 - test_SS_err/test_SS_total
+
+test_f = test_SS_reg/(test_SS_err/(69-1-1))
+pf(test_f, 
+   1, 
+   60, 
+   lower.tail = FALSE) # p-value for slope=1 model
+
+sqrt(mean(test$Residuals^2, na.rm = TRUE))
+
 #####
 
-full_plot = ggarrange(echo_masked_plot, copepod_plot, cfin_plot, ncol=1, common.legend = T, legend = "right", labels = "AUTO")
+full_plot = ggarrange(echo_masked_plot, copepod_plot, cfin_plot, ncol=1, common.legend = T, legend = "right", labels = "AUTO") +
+  theme(plot.background = element_rect(fill="white",color="white"))
 
-ggsave(full_plot, filename = paste0(figure_dir, 'Sv_Correlation_Plot_Full.png'),width=8,height=8,units="in")
+ggsave(full_plot, filename = paste0(figure_dir, 'Sv_Correlation_Plot_Full.png'),width=6,height=10,units="in")
+
+#####
+## Varying correlation model for Sv(echo) and Sv(cfin)
+
+cfin_plot_vary = ggplot(data = correlation_cfin[correlation_cfin$Frequency == "455kHz",], aes(x = Echo_Masked_Sv, y = Cfin_Sv)) +
+  geom_point(color = "#35b779") +
+  # All echo data
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1, color = "#35b779", aes(group = "All Echo Data", linetype = "All Echo Data")) +
+  # Slope forced to 1
+  geom_segment(x=-84.48111,y=(intercept-84.48111),
+               xend=-51.01692,yend=(intercept-51.01692),
+               color="#35b779",linewidth=1,aes(group="Slope=1",linetype="Slope=1"),
+               inherit.aes = F) +
+  # Top 50% of echo data
+  geom_segment(x=-84.48111,y=(-62.75 - 0.4 * 84.48111),
+               xend=-51.01692,yend=(-62.75 - 0.4 * 51.01692),
+               color="#35b779",linewidth=1,aes(group="Top 50% of Echo Data",linetype="Top 50% of Echo Data"),
+               inherit.aes=F) +
+  geom_abline(aes(slope = 1, intercept = 0, group = "y=x", linetype = "y=x"), color="black") +
+  scale_linetype_manual("455 kHz Equation",values = c("All Echo Data"=1, "Slope=1"=4,"Top 50% of Echo Data"=3,"y=x"=1),
+                        breaks = c("All Echo Data", "Top 50% of Echo Data","Slope=1","y=x")) +
+  coord_cartesian(xlim = c(-85,-50), ylim = c(-110, -75)) +
+  labs(x = "Masked Sv(echo) (dB)", y = "Sv(cfin) (dB)") +
+  theme_bw()
+ggsave(filename = paste0(figure_dir, "Cfin_Echo_Sv_Masked_Correlation_Varying_Corr_Eq.png"),scale=2)
 
 #####
 ## The Small Copepods Problem
@@ -563,11 +652,11 @@ Copepod_Data = Net_Data[which(Net_Data$taxa %in% small_copepods | Net_Data$taxa 
 # 
 # ggsave(paste0(figure_dir, "/Copepod_Biomass_By_Station.png"))
 # 
-# correlation_copepod_test = correlation_copepod[which(correlation_copepod$Frequency_Diff != "200kHz-130kHz"),]
+# correlation_copepod_test = correlation_copepod[which(correlation_copepod$Frequency != "200kHz-130kHz"),]
 # correlation_copepod_test$Station = as.numeric(correlation_copepod_test$Station)
 # 
-# ggplot(data = correlation_copepod_test, aes(x = Echo_Diff_Sv, y = Copepod_Sv, shape = Net, color = Frequency_Diff)) +
-#   geom_point(na.rm = TRUE, aes(group = Frequency_Diff)) +
+# ggplot(data = correlation_copepod_test, aes(x = Echo_Diff_Sv, y = Copepod_Sv, shape = Net, color = Frequency)) +
+#   geom_point(na.rm = TRUE, aes(group = Frequency)) +
 #   geom_abline(slope = 1, intercept= 0) +
 #   facet_wrap(~Station, scales = "free_y")
 # 
@@ -575,7 +664,7 @@ Copepod_Data = Net_Data[which(Net_Data$taxa %in% small_copepods | Net_Data$taxa 
 
 # ANCOVA on copepod biomass with Echo_Sv and Echo_Diff_Sv at high frequency/frequency diffs
 # Echo_Sv and Echo_Diff_Sv are the response variables; Copepod_Biomass is the covariate;
-# Frequency/Frequency_Diff and Community_Comp are the grouping variables
+# Frequency/Frequency and Community_Comp are the grouping variables
 
 # Is Copepod_Biomass still log-normally distributed? Yes
 
@@ -785,7 +874,7 @@ biomass_masked_correlation = data.frame(
   10 * log10(temp4)
 )
 #rm(temp1, temp2)
-colnames(biomass_masked_correlation) = c("Basin", "Station", "Frequency_Diff", "Net", "Community_Comp", "Multi_Sv", "Echo_Masked_Sv")
+colnames(biomass_masked_correlation) = c("Basin", "Station", "Frequency", "Net", "Community_Comp", "Multi_Sv", "Echo_Masked_Sv")
 biomass_masked_correlation[biomass_masked_correlation$Echo_Masked_Sv == -Inf,7] = NA
 
 for(i in 1:nrow(biomass_masked_correlation)) {
@@ -814,10 +903,10 @@ biomass_masked_correlation$Log10_Cfin_Concentration = log10(rep(cfin_concentrati
 biomass_masked_correlation[biomass_masked_correlation$Log10_Cfin_Concentration == -Inf, 10] = NA
 
 biomass_masked_correlation = biomass_masked_correlation %>%
-  group_by(Frequency_Diff) %>%
+  group_by(Frequency) %>%
   do(remove_outliers(.,"Echo_Masked_Sv"))
 
-biomass_masked_correlation$Frequency_Diff = as.factor(biomass_masked_correlation$Frequency_Diff)
+biomass_masked_correlation$Frequency = as.factor(biomass_masked_correlation$Frequency)
 biomass_masked_correlation$Community_Comp = as.factor(biomass_masked_correlation$Community_Comp)
 
 
@@ -828,19 +917,19 @@ biomass_masked_correlation$Community_Comp = as.factor(biomass_masked_correlation
 ggplot(data = biomass_masked_correlation, aes(x = Log10_Copepod_Biomass, y = Echo_Masked_Sv)) + 
   geom_point() +
   geom_smooth(span = 0.9) +
-  facet_wrap(~Frequency_Diff + Community_Comp)
+  facet_wrap(~Frequency + Community_Comp)
 
 # Result: low biomass not approximately linear
 
 # Homogeneity of regression slopes
 
-biomass_masked_correlation %>% ungroup() %>% anova_test(Echo_Masked_Sv ~ Log10_Copepod_Biomass * Community_Comp * Frequency_Diff)
+biomass_masked_correlation %>% ungroup() %>% anova_test(Echo_Masked_Sv ~ Log10_Copepod_Biomass * Community_Comp * Frequency)
 
 # Result: some significant interaction between covariate and grouping variables
 
 # Normality of residuals
 
-model = lm(Echo_Masked_Sv ~ Log10_Copepod_Biomass + Frequency_Diff*Community_Comp, data = biomass_masked_correlation)
+model = lm(Echo_Masked_Sv ~ Log10_Copepod_Biomass + Frequency*Community_Comp, data = biomass_masked_correlation)
 model_metrics = augment(model)
 shapiro_test(model_metrics$.resid)
 
@@ -848,7 +937,7 @@ shapiro_test(model_metrics$.resid)
 
 # Homogeneity of variances
 
-levene_test(data = model_metrics, .resid ~ Frequency_Diff*Community_Comp)
+levene_test(data = model_metrics, .resid ~ Frequency*Community_Comp)
 
 # Result: variances are NOT approximately homogeneous (p = 0.0000358)
 
@@ -860,16 +949,16 @@ model_metrics %>% filter(abs(.std.resid) > 3) %>% as.data.frame()
 
 # ANCOVA computation
 
-res_aov = biomass_masked_correlation %>% ungroup() %>% anova_test(Echo_Masked_Sv ~ Log10_Copepod_Biomass * Frequency_Diff * Community_Comp)
+res_aov = biomass_masked_correlation %>% ungroup() %>% anova_test(Echo_Masked_Sv ~ Log10_Copepod_Biomass * Frequency * Community_Comp)
 get_anova_table(res_aov)
 
 # Result: after adjustment for copepod biomass, there was a statistically significant effect
 # of frequency difference and community composition on Echo_Sv, but not of (log10 of) copepod biomass or the interaction
 # between any of them
-# This indicates that Echo_Diff_Sv is dependent on Frequency_Diff and Community_Comp, but not
+# This indicates that Echo_Diff_Sv is dependent on Frequency and Community_Comp, but not
 # (the log10 of) Copepod_Biomass or the interactions
 
-plot1 = ggplot(data = biomass_masked_correlation, aes(y = Log10_Total_Biomass, x = Echo_Masked_Sv, colour = Frequency_Diff, shape = Frequency_Diff)) +
+plot1 = ggplot(data = biomass_masked_correlation, aes(y = Log10_Total_Biomass, x = Echo_Masked_Sv, colour = Frequency, shape = Frequency)) +
   geom_point(na.rm = TRUE) +
   scale_color_viridis_d(begin = 0.2, end = 0.9) +
   geom_smooth(method = "lm", se = FALSE, show.legend = F) +
@@ -881,7 +970,7 @@ plot1 = ggplot(data = biomass_masked_correlation, aes(y = Log10_Total_Biomass, x
 
 ggsave(paste0(figure_dir, "/Total_Biomass_Echo_Masked_Sv_Correlation.png"),scale=2)
 
-plot2 = ggplot(data = biomass_masked_correlation, aes(y = Log10_Copepod_Biomass, x = Echo_Masked_Sv, colour = Frequency_Diff, shape = Frequency_Diff)) +
+plot2 = ggplot(data = biomass_masked_correlation, aes(y = Log10_Copepod_Biomass, x = Echo_Masked_Sv, colour = Frequency, shape = Frequency)) +
   geom_point(na.rm = TRUE) +
   scale_color_viridis_d(begin = 0.2, end = 0.9) +
   geom_smooth(method = "lm", se = FALSE, show.legend = F) +
@@ -893,7 +982,7 @@ plot2 = ggplot(data = biomass_masked_correlation, aes(y = Log10_Copepod_Biomass,
 
 ggsave(paste0(figure_dir, "/Copepod_Biomass_Echo_Masked_Sv_Correlation.png"),scale=2)
 
-plot3 = ggplot(data = biomass_masked_correlation, aes(y = Log10_Cfin_Biomass, x = Echo_Masked_Sv, colour = Frequency_Diff, shape = Frequency_Diff)) +
+plot3 = ggplot(data = biomass_masked_correlation, aes(y = Log10_Cfin_Biomass, x = Echo_Masked_Sv, colour = Frequency, shape = Frequency)) +
   geom_point(na.rm = TRUE) +
   scale_color_viridis_d(begin = 0.2, end = 0.9) +
   geom_smooth(method = "lm", se = FALSE) +
@@ -905,7 +994,7 @@ plot3 = ggplot(data = biomass_masked_correlation, aes(y = Log10_Cfin_Biomass, x 
 
 ggsave(paste0(figure_dir, "/Cfin_Biomass_Echo_Masked_Sv_Correlation.png"),scale=2)
 
-plot4 = ggplot(data = biomass_masked_correlation, aes(y = Log10_Total_Concentration, x = Echo_Masked_Sv, colour = Frequency_Diff, shape = Frequency_Diff)) +
+plot4 = ggplot(data = biomass_masked_correlation, aes(y = Log10_Total_Concentration, x = Echo_Masked_Sv, colour = Frequency, shape = Frequency)) +
   geom_point(na.rm = TRUE) +
   scale_color_viridis_d(begin = 0.2, end = 0.9) +
   geom_smooth(method = "lm", se = FALSE, show.legend = F) +
@@ -917,7 +1006,7 @@ plot4 = ggplot(data = biomass_masked_correlation, aes(y = Log10_Total_Concentrat
 
 ggsave(paste0(figure_dir, "/Total_Concentration_Echo_Masked_Sv_Correlation.png"),scale=2)
 
-plot5 = ggplot(data = biomass_masked_correlation, aes(y = Log10_Copepod_Concentration, x = Echo_Masked_Sv, colour = Frequency_Diff, shape = Frequency_Diff)) +
+plot5 = ggplot(data = biomass_masked_correlation, aes(y = Log10_Copepod_Concentration, x = Echo_Masked_Sv, colour = Frequency, shape = Frequency)) +
   geom_point(na.rm = TRUE) +
   scale_color_viridis_d(begin = 0.2, end = 0.9) +
   geom_smooth(method = "lm", se = FALSE, show.legend = F) +
@@ -929,7 +1018,7 @@ plot5 = ggplot(data = biomass_masked_correlation, aes(y = Log10_Copepod_Concentr
 
 ggsave(paste0(figure_dir, "/Copepod_Concentration_Echo_Masked_Sv_Correlation.png"),scale=2)
 
-plot6 = ggplot(data = biomass_masked_correlation, aes(y = Log10_Cfin_Concentration, x = Echo_Masked_Sv, colour = Frequency_Diff, shape = Frequency_Diff)) +
+plot6 = ggplot(data = biomass_masked_correlation, aes(y = Log10_Cfin_Concentration, x = Echo_Masked_Sv, colour = Frequency, shape = Frequency)) +
   geom_point(na.rm = TRUE) +
   scale_color_viridis_d(begin = 0.2, end = 0.9) +
   geom_smooth(method = "lm", se = FALSE) +
@@ -948,7 +1037,7 @@ ggarrange(plot1, plot4, plot2, plot5, plot3, plot6, ncol=2,nrow=3, common.legend
 ggsave(paste0(figure_dir, "/Biomass_Echo_Masked_Sv_Correlations.png"),width=8,height=8,units="in")
 
 
-ggplot(data = biomass_masked_correlation, aes(y = Log10_Copepod_Biomass, x = Multi_Sv, colour = Frequency_Diff)) +
+ggplot(data = biomass_masked_correlation, aes(y = Log10_Copepod_Biomass, x = Multi_Sv, colour = Frequency)) +
   geom_point(na.rm = TRUE) +
   scale_color_viridis_d(begin = 0.2, end = 0.9) +
   geom_smooth(method = "lm", se = FALSE, show.legend = F) +
@@ -958,7 +1047,7 @@ ggplot(data = biomass_masked_correlation, aes(y = Log10_Copepod_Biomass, x = Mul
 
 ggsave(paste0(figure_dir, "/Copepod_Biomass_Multi_Sv_Correlation_.png"))
 
-ggplot(data = biomass_masked_correlation, aes(y = Log10_Total_Biomass, x = Multi_Sv, colour = Frequency_Diff)) +
+ggplot(data = biomass_masked_correlation, aes(y = Log10_Total_Biomass, x = Multi_Sv, colour = Frequency)) +
   geom_point(na.rm = TRUE) +
   scale_color_viridis_d(begin = 0.2, end = 0.9) +
   geom_smooth(method = "lm", se = FALSE, show.legend = F) +
@@ -968,7 +1057,7 @@ ggplot(data = biomass_masked_correlation, aes(y = Log10_Total_Biomass, x = Multi
 
 ggsave(paste0(figure_dir, "/Total_Biomass_Multi_Sv_Correlation_.png"))
 
-ggplot(data = biomass_masked_correlation, aes(y = Log10_Cfin_Biomass, x = Multi_Sv, colour = Frequency_Diff)) +
+ggplot(data = biomass_masked_correlation, aes(y = Log10_Cfin_Biomass, x = Multi_Sv, colour = Frequency)) +
   geom_point(na.rm = TRUE) +
   scale_color_viridis_d(begin = 0.2, end = 0.9) +
   geom_smooth(method = "lm", se = F) +
@@ -980,7 +1069,7 @@ ggsave(paste0(figure_dir, "/Cfin_Biomass_Multi_Sv_Correlation_.png"))
 
 
 
-models = biomass_masked_correlation %>% group_by(Frequency_Diff) %>% do(
+models = biomass_masked_correlation %>% group_by(Frequency) %>% do(
     total_model = summary(lm(Log10_Total_Biomass ~ Echo_Masked_Sv, data = .)),
     copepod_model = summary(lm(Log10_Copepod_Biomass ~ Echo_Masked_Sv, data = .)),
     cfin_model = summary(lm(Log10_Cfin_Biomass ~ Echo_Masked_Sv, data = .))
@@ -1018,7 +1107,7 @@ for(i in 1:length(models[[1]])){
                                       lower.tail = FALSE), digits = 2)))
 }
 
-models = biomass_masked_correlation %>% group_by(Frequency_Diff) %>% do(
+models = biomass_masked_correlation %>% group_by(Frequency) %>% do(
   total_model = (lm(Log10_Total_Biomass ~ Echo_Masked_Sv, data = .)),
   copepod_model = (lm(Log10_Copepod_Biomass ~ Echo_Masked_Sv, data = .)),
   cfin_model = (lm(Log10_Cfin_Biomass ~ Echo_Masked_Sv, data = .))
@@ -1036,13 +1125,13 @@ for(i in 1:length(models[[1]])) {
 }
 
 require(plyr)
-ddply(biomass_masked_correlation, .(Frequency_Diff, Community_Comp), summarise,
+ddply(biomass_masked_correlation, .(Frequency, Community_Comp), summarise,
       z=corfun(Echo_Masked_Sv,Log10_Copepod_Biomass)$statistic,
       pval=corfun(Echo_Masked_Sv,Log10_Copepod_Biomass)$p.value,
       r2=(corfun(Echo_Masked_Sv,Log10_Copepod_Biomass)$estimate)^2,
       alt=corfun(Echo_Masked_Sv,Log10_Copepod_Biomass)$alternative
 )
-ddply(biomass_masked_correlation, .(Frequency_Diff), summarise,
+ddply(biomass_masked_correlation, .(Frequency), summarise,
       z=corfun(Echo_Masked_Sv,Log10_Copepod_Biomass)$statistic,
       pval=corfun(Echo_Masked_Sv,Log10_Copepod_Biomass)$p.value,
       r2=(corfun(Echo_Masked_Sv,Log10_Copepod_Biomass)$estimate)^2,
@@ -1054,13 +1143,13 @@ ddply(biomass_masked_correlation, .(Community_Comp), summarise,
       r2=(corfun(Echo_Masked_Sv,Log10_Copepod_Biomass)$estimate)^2,
       alt=corfun(Echo_Masked_Sv,Log10_Copepod_Biomass)$alternative
 )
-ddply(biomass_masked_correlation, .(Frequency_Diff, Community_Comp), summarise,
+ddply(biomass_masked_correlation, .(Frequency, Community_Comp), summarise,
       z=corfun(Echo_Masked_Sv,Log10_Total_Biomass)$statistic,
       pval=corfun(Echo_Masked_Sv,Log10_Total_Biomass)$p.value,
       r2=(corfun(Echo_Masked_Sv,Log10_Total_Biomass)$estimate)^2,
       alt=corfun(Echo_Masked_Sv,Log10_Total_Biomass)$alternative
 )
-ddply(biomass_masked_correlation, .(Frequency_Diff), summarise,
+ddply(biomass_masked_correlation, .(Frequency), summarise,
       z=corfun(Echo_Masked_Sv,Log10_Total_Biomass)$statistic,
       pval=corfun(Echo_Masked_Sv,Log10_Total_Biomass)$p.value,
       r2=(corfun(Echo_Masked_Sv,Log10_Total_Biomass)$estimate)^2,
@@ -1072,13 +1161,13 @@ ddply(biomass_masked_correlation, .(Community_Comp), summarise,
       r2=(corfun(Echo_Masked_Sv,Log10_Total_Biomass)$estimate)^2,
       alt=corfun(Echo_Masked_Sv,Log10_Total_Biomass)$alternative
 )
-ddply(biomass_masked_correlation, .(Frequency_Diff, Community_Comp), summarise,
+ddply(biomass_masked_correlation, .(Frequency, Community_Comp), summarise,
       z=corfun(Echo_Masked_Sv,Log10_Cfin_Biomass)$statistic,
       pval=corfun(Echo_Masked_Sv,Log10_Cfin_Biomass)$p.value,
       r2=(corfun(Echo_Masked_Sv,Log10_Cfin_Biomass)$estimate)^2,
       alt=corfun(Echo_Masked_Sv,Log10_Cfin_Biomass)$alternative
 )
-ddply(biomass_masked_correlation, .(Frequency_Diff), summarise,
+ddply(biomass_masked_correlation, .(Frequency), summarise,
       z=corfun(Echo_Masked_Sv,Log10_Cfin_Biomass)$statistic,
       pval=corfun(Echo_Masked_Sv,Log10_Cfin_Biomass)$p.value,
       r2=(corfun(Echo_Masked_Sv,Log10_Cfin_Biomass)$estimate)^2,
@@ -1135,7 +1224,7 @@ for(i in 1:nrow(pneu_comparison)) {
 pneu_comparison_masked = pneu_comparison
 pneu_comparison_masked$Frequency = rep(c("130kHz", "200kHz-130kHz","455kHz-200kHz","769kHz-455kHz"), each = 80)
 pneu_comparison_masked$Echo_Sv[81:320] = 10 * log10(temp4[81:320])
-colnames(pneu_comparison_masked) = c("Basin", "Station", "Frequency_Diff", "Net", "Community_Comp", 
+colnames(pneu_comparison_masked) = c("Basin", "Station", "Frequency", "Net", "Community_Comp", 
                                    "Multi_Sv", "Min_Pneu_Count_Multi_Sv", "Echo_Masked_Sv")
 pneu_comparison_masked[pneu_comparison_masked$Echo_Masked_Sv == -Inf,8] = NA
 
@@ -1202,8 +1291,8 @@ detach("package:plyr")
 
 # Echo_Masked_Sv
 
-ggplot(data = pneu_comparison_masked, aes(x = Echo_Masked_Sv, y = Min_Pneu_Count_Multi_Sv, shape = Frequency_Diff, color = Frequency_Diff)) +
-  geom_point(na.rm = TRUE, aes(group = Frequency_Diff)) +
+ggplot(data = pneu_comparison_masked, aes(x = Echo_Masked_Sv, y = Min_Pneu_Count_Multi_Sv, shape = Frequency, color = Frequency)) +
+  geom_point(na.rm = TRUE, aes(group = Frequency)) +
   geom_abline(slope = 1, intercept= 0) +
   scale_color_viridis_d(begin = 0.2, end = 0.9) +
   geom_smooth(method = "lm", se = FALSE, linewidth = 1) +
@@ -1218,7 +1307,7 @@ ddply(pneu_comparison_masked, .(Basin), summarise,
       r2=(corfun(Min_Pneu_Count_Multi_Sv,Echo_Masked_Sv)$estimate)^2,
       alt=corfun(Min_Pneu_Count_Multi_Sv,Echo_Masked_Sv)$alternative
 )
-ddply(pneu_comparison_masked, .(Basin, Frequency_Diff), summarise,
+ddply(pneu_comparison_masked, .(Basin, Frequency), summarise,
       z=corfun(Min_Pneu_Count_Multi_Sv,Echo_Masked_Sv)$statistic,
       pval=corfun(Min_Pneu_Count_Multi_Sv,Echo_Masked_Sv)$p.value,
       r2=(corfun(Min_Pneu_Count_Multi_Sv,Echo_Masked_Sv)$estimate)^2,
@@ -1230,14 +1319,14 @@ ddply(pneu_comparison_masked, .(Community_Comp), summarise,
       r2=(corfun(Min_Pneu_Count_Multi_Sv,Echo_Masked_Sv)$estimate)^2,
       alt=corfun(Min_Pneu_Count_Multi_Sv,Echo_Masked_Sv)$alternative
 )
-ddply(pneu_comparison_masked, .(Frequency_Diff, Community_Comp), summarise,
+ddply(pneu_comparison_masked, .(Frequency, Community_Comp), summarise,
       z=corfun(Min_Pneu_Count_Multi_Sv,Echo_Masked_Sv)$statistic,
       pval=corfun(Min_Pneu_Count_Multi_Sv,Echo_Masked_Sv)$p.value,
       r2=(corfun(Min_Pneu_Count_Multi_Sv,Echo_Masked_Sv)$estimate)^2,
       alt=corfun(Min_Pneu_Count_Multi_Sv,Echo_Masked_Sv)$alternative
 )
 
-values4 = ddply(pneu_comparison_masked, .(Frequency_Diff, Community_Comp), summarise,
+values4 = ddply(pneu_comparison_masked, .(Frequency, Community_Comp), summarise,
                 z=corfun(Min_Pneu_Count_Multi_Sv,Echo_Masked_Sv)$statistic,
                 pval=corfun(Min_Pneu_Count_Multi_Sv,Echo_Masked_Sv)$p.value,
                 r2=(corfun(Min_Pneu_Count_Multi_Sv,Echo_Masked_Sv)$estimate)^2,
@@ -1319,7 +1408,7 @@ ddply(pneu_comparison_masked, .(Affected_By_Min_Pneu_Estimate), summarise,
       r2=(corfun(Min_Pneu_Count_Multi_Sv,Echo_Masked_Sv)$estimate)^2,
       alt=corfun(Min_Pneu_Count_Multi_Sv,Echo_Masked_Sv)$alternative
 )
-ddply(pneu_comparison_masked, .(Affected_By_Min_Pneu_Estimate, Frequency_Diff), summarise,
+ddply(pneu_comparison_masked, .(Affected_By_Min_Pneu_Estimate, Frequency), summarise,
       z=corfun(Min_Pneu_Count_Multi_Sv,Echo_Masked_Sv)$statistic,
       pval=corfun(Min_Pneu_Count_Multi_Sv,Echo_Masked_Sv)$p.value,
       r2=(corfun(Min_Pneu_Count_Multi_Sv,Echo_Masked_Sv)$estimate)^2,
@@ -1378,7 +1467,7 @@ Echo_Masked_Sv_Pneu_Comparison = Echo_Masked_Sv_Pneu_Comparison %>% group_by(Com
 Echo_Masked_Sv_Pneu_Comparison %>% summarise(result = wilcox_test(r2 ~ Pneu_Group, data = Echo_Masked_Sv_Pneu_Comparison, paired = T))
 ungroup(Echo_Masked_Sv_Pneu_Comparison)
 
-Echo_Masked_Sv_Pneu_Comparison = Echo_Masked_Sv_Pneu_Comparison %>% group_by(Frequency_Diff)
+Echo_Masked_Sv_Pneu_Comparison = Echo_Masked_Sv_Pneu_Comparison %>% group_by(Frequency)
 Echo_Masked_Sv_Pneu_Comparison %>% summarise(wilcox_test(r2 ~ Pneu_Group, data = Echo_Masked_Sv_Pneu_Comparison, paired = T))
 ungroup(Echo_Masked_Sv_Pneu_Comparison)
 

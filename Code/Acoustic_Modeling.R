@@ -3,7 +3,7 @@
 #####
 rm(list = ls())
 
-setwd("C:/Users/dmossman/Box/2022 MSc Thesis Work/")
+setwd("C:/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/")
 
 ## Libraries
 
@@ -19,15 +19,15 @@ sourceDirectory('Code/Hansen Zooplankton Code and Sample Data/src',
                 modifiedOnly = F)
 
 function_dir = 'Code/Hansen Zooplankton Code and Sample Data/src/'
-create_dir(function_dir)
+
 cache_dir = 'Processed_Data/'
-create_dir(cache_dir)
+
 data_dir = 'Raw_Data/'
-create_dir(data_dir)
+
 figure_dir = 'Visuals/'
-create_dir(figure_dir)
+
 report_dir = getwd()
-create_dir(report_dir)
+
 
 ## Load in data structures created by Multinet_Abundance_Processing.R
 
@@ -60,7 +60,7 @@ cfin_TS = c(-129.7,	-122.3,	-108.3,	-99.9);
 
 # For siphonophores: Joe's values
 
-siph_TS = c(-80, -70, -80, -80); # CURRENTLY PLACEHOLDER VALUES; REPLACE WITH JOE'S CALCS
+siph_TS = c(-80, -70, -80, -80); 
 
 # For euphausiids: ZooScatR
 
@@ -161,7 +161,7 @@ for(i in seq_along(levels(Net_Data$station))) {
     tmp2 = subset(tmp, tmp$net == netnum)
     tmp2 = droplevels(tmp2)
     
-    # sum up the Sv from the net and put it in the Integrated Sv structure
+    # add all the individually calculated Svs from the net and put it in the Integrated Sv structure
     # don't forget to convert to linear space to sum!
     Integrated_Sv[1,j] = sum(10^(tmp2$Sv1/10), na.rm = TRUE)
     Integrated_Sv[2,j] = sum(10^(tmp2$Sv2/10), na.rm = TRUE)
@@ -206,7 +206,7 @@ for(i in seq_along(levels(Copepod_Data$station))) {
     tmp2 = subset(tmp, tmp$net == netnum)
     tmp2 = droplevels(tmp2)
     
-    # sum up the Sv from the net and put it in the Integrated Sv structure
+    # sum the Svs within the net and put it in the Integrated Sv structure
     # don't forget to convert to linear space to sum!
     Integrated_Sv[1,j] = sum(10^(tmp2$Sv1/10), na.rm = TRUE)
     Integrated_Sv[2,j] = sum(10^(tmp2$Sv2/10), na.rm = TRUE)
@@ -291,7 +291,7 @@ for(i in seq_along(levels(CFin_Data$station))) {
     tmp2 = droplevels(tmp2)
     
     # sum up the Sv from the net and put it in the Integrated Sv structure
-    # don't forget to convert to linear space to sum!
+    # don't forget to convert to linear space!
     Integrated_Sv[1,j] = sum(10^(tmp2$Sv1/10), na.rm = TRUE)
     Integrated_Sv[2,j] = sum(10^(tmp2$Sv2/10), na.rm = TRUE)
     Integrated_Sv[3,j] = sum(10^(tmp2$Sv3/10), na.rm = TRUE)

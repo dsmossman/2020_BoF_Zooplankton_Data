@@ -5,18 +5,18 @@
 clc
 clear variables
 close all
-addpath( genpath('/Users/dmossman/Box/2022 MSc Thesis Work/Code/AzfpMatlabToolbox_v18'))
-addpath( genpath('/Users/dmossman/Box/2022 MSc Thesis Work/Raw_Data'))
-addpath( genpath('/Users/dmossman/Box/2022 MSc Thesis Work/Processed_Data'))
+addpath( genpath('/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Code/AzfpMatlabToolbox_v18'))
+addpath( genpath('/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Raw_Data'))
+addpath( genpath('/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Processed_Data'))
 addpath( genpath('/Users/dmossman/Box/Glider Data/'))
 
 date = input('Enter the numerical day of the data: ','s');
 
-filename = strcat("/Users/dmossman/Box/2022 MSc Thesis Work/Processed_Data/",date,"Sept_Processed_Data.mat");
+filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Processed_Data/",date,"Sept_Processed_Data.mat");
 load(filename);
 clear filename;
 
-filename = strcat("/Users/dmossman/Box/2022 MSc Thesis Work/Processed_Data/",date,"Sept_Differencing_Data.mat");
+filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Processed_Data/",date,"Sept_Differencing_Data.mat");
 load(filename);
 clear filename;
 
@@ -24,7 +24,7 @@ clear filename;
 
 % Load the event log CSV
 warning('off','MATLAB:table:ModifiedAndSavedVarnames')
-MultiData = readtable('/Users/dmossman/Box/2022 MSc Thesis Work/Raw_Data/Spreadsheets/Sept2020_Cruise_Leg_2_Multinet_Log.csv');
+MultiData = readtable('/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Raw_Data/Spreadsheets/Sept2020_Cruise_Leg_2_Multinet_Log.csv');
 
 % Keep only the relevant tows and variables
 MultiData = MultiData([2:5 7 9 11 12 14 15 17:22],[2 4 5:16]);
@@ -219,7 +219,7 @@ for k = 1:size(Integration, 2) % for each tow
     X.Properties.RowNames = ["Freq1";"Freq2";"Freq3";"Freq4"];
     
     %     save the file
-    filename = strcat("/Users/dmossman/Box/2022 MSc Thesis Work/Processed_Data/Glider/",...
+    filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Processed_Data/Glider/",...
         "Integrated_Sv_",...
         string(date),...
         "_Sep_2020_multi",...
@@ -244,8 +244,8 @@ end
 % First get the dB difference window
 % Values below are for copepods between 1.27 and 2.99 mm in length, from
 % Joe's spreadsheet
-dB_Diff_Lower = [7.4, 15.8, 7.8]; % input('Enter the lower dB difference bounds: ');
-dB_Diff_Upper = [7.5, 16.3, 8.8]; % input('Enter the upper dB difference bound: ');
+dB_Diff_Lower = [7.4, 13.7, 7.8]; % input('Enter the lower dB difference bounds: ');
+dB_Diff_Upper = [7.5, 14.2, 8.8]; % input('Enter the upper dB difference bound: ');
 
 % Testing different window sizes for middle frequencies
 
@@ -290,7 +290,7 @@ for k = 1:size(Integration,2) % for each tow
     Y.Properties.VariableNames = ["Net1" "Net2" "Net3" "Net4" "Net5"];
     Y.Properties.RowNames = ["Freq2-Freq1", "Freq3-Freq2", "Freq4-Freq3"];
     
-    filename = strcat("/Users/dmossman/Box/2022 MSc Thesis Work/Processed_Data/Glider/",...
+    filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Processed_Data/Glider/",...
         "Integrated_Sv_Masked_",...
         string(date),...
         "_Sep_2020_multi",...
@@ -305,10 +305,10 @@ end
 
 %% Save variables
 
-filename = strcat("/Users/dmossman/Box/2022 MSc Thesis Work/Processed_Data/",date,"Sept_Integration_Data.mat");
+filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Processed_Data/",date,"Sept_Integration_Data.mat");
 save(filename, 'gliderdata2', 'gtime2', 'netintervals','MultiData','starttow','endtow', 'Integration');
 clear filename;
 
-filename = strcat("/Users/dmossman/Box/2022 MSc Thesis Work/Processed_Data/",date,"Sept_Masked_Data.mat");
+filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Processed_Data/",date,"Sept_Masked_Data.mat");
 save(filename, 'Integration', '-V6');
 clear filename;

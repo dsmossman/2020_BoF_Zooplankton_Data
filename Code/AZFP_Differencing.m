@@ -5,14 +5,14 @@
 clc
 clear variables
 close all
-addpath( genpath('/Users/dmossman/Box/2022 MSc Thesis Work/Code/AzfpMatlabToolbox_v18'))
-addpath( genpath('/Users/dmossman/Box/2022 MSc Thesis Work/Raw_Data'))
-addpath( genpath('/Users/dmossman/Box/2022 MSc Thesis Work/Processed_Data'))
+addpath( genpath('/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Code/AzfpMatlabToolbox_v18'))
+addpath( genpath('/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Raw_Data'))
+addpath( genpath('/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Processed_Data'))
 addpath( genpath('/Users/dmossman/Box/Glider Data/'))
 
 date = input('Enter the numerical day of the data: ','s');
 
-filename = strcat("/Users/dmossman/Box/2022 MSc Thesis Work/Processed_Data/",date,"Sept_Processed_Data.mat");
+filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Processed_Data/",date,"Sept_Processed_Data.mat");
 load(filename);
 clear filename;
 
@@ -64,7 +64,7 @@ for ii=1:3
     for dd = 1:length(dbins)
         for pp = 1:size(Output(biggest).Depth,1)
             I = find(Output(biggest).Depth(pp,:) > (dbins(dd)-0.5) & Output(biggest).Depth(pp,:) <= (dbins(dd)+0.5) );
-            PDiff(ii).avg_sv(pp,dd) = nanmean(10.^(Diff(ii).SvDiff(pp,I)./10)); % averages are in the linear space
+            PDiff(ii).avg_sv(pp,dd) = mean(10.^(Diff(ii).SvDiff(pp,I)./10), 'omitnan'); % averages are in the linear space
         end
     end
 end
@@ -122,7 +122,7 @@ h.Position(2) = 0.5-h.Position(4)/2;
 AddLetters2Plots(gcf,'VShift',-0.04)
 
 % save file
-filename = strcat("/Users/dmossman/Box/2022 MSc Thesis Work/Visuals/MATLAB Echosounder Figures/",date,"Sept/Frequency_Differences_All_",date,"Sept.png");
+filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Visuals/MATLAB Echosounder Figures/",date,"Sept/Frequency_Differences_All_",date,"Sept.png");
 print(gcf,'-dpng',filename,'-r0')
 clear filename
 close;
@@ -142,14 +142,14 @@ for jj=1:3 % Frequency index
                 cc = cc+1;  % Dive count
                 % grab the avg_sv values corresponding to the dive
                 DiveDiff(cc).PDiff(jj).sv = PDiff(jj).avg_sv(StartDive(DD):end,:);
-                DiveDiff(cc).PDiff(jj).msv = nanmean(DiveDiff(cc).PDiff(jj).sv,1);
+                DiveDiff(cc).PDiff(jj).msv = mean(DiveDiff(cc).PDiff(jj).sv,1, 'omitnan');
             end
         else % when we are not at the end of the StartDive vector
             if (StartDive(DD+1)-1 - StartDive(DD)) >250
                 cc = cc+1; % Dive count
                 % grab the avg_sv values corresponding to the dive
                 DiveDiff(cc).PDiff(jj).sv = PDiff(jj).avg_sv(StartDive(DD):StartDive(DD+1)-1,:);
-                DiveDiff(cc).PDiff(jj).msv = nanmean(DiveDiff(cc).PDiff(jj).sv,1);
+                DiveDiff(cc).PDiff(jj).msv = mean(DiveDiff(cc).PDiff(jj).sv,1,'omitnan');
             end
         end
     end
@@ -239,7 +239,7 @@ figure(1)
 g = legend({'130 kHz','200 kHz','200-130 kHz'}, 'Orientation','horizontal');
 set(g,'Position',[0.5,0,0.05,0.05]);
     AddLetters2Plots(gcf,'VShift',-0.04)
-print(gcf,'-dpng',['/Users/dmossman/Box/2022 MSc Thesis Work/Visuals/MATLAB Echosounder Figures/',date,'Sept/Ping Averaged Profiles/Avg_Profiles_',date,'Sept_1.png'],'-r0')
+print(gcf,'-dpng',['/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Visuals/MATLAB Echosounder Figures/',date,'Sept/Ping Averaged Profiles/Avg_Profiles_',date,'Sept_1.png'],'-r0')
 clear g;
 
 % Set a legend for the entire plot
@@ -247,7 +247,7 @@ figure(2)
 g = legend({'200 kHz','455 kHz','455-200 kHz'}, 'Orientation','horizontal');
 set(g,'Position',[0.5,0,0.05,0.05]);
     AddLetters2Plots(gcf,'VShift',-0.04)
-print(gcf,'-dpng',['/Users/dmossman/Box/2022 MSc Thesis Work/Visuals/MATLAB Echosounder Figures/',date,'Sept/Ping Averaged Profiles/Avg_Profiles_',date,'Sept_2.png'],'-r0')
+print(gcf,'-dpng',['/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Visuals/MATLAB Echosounder Figures/',date,'Sept/Ping Averaged Profiles/Avg_Profiles_',date,'Sept_2.png'],'-r0')
 clear g;
 
 % Set a legend for the entire plot
@@ -255,7 +255,7 @@ figure(3)
 g = legend({'455 kHz','769 kHz','769-455 kHz'}, 'Orientation','horizontal');
 set(g,'Position',[0.5,0,0.05,0.05]);
     AddLetters2Plots(gcf,'VShift',-0.04)
-print(gcf,'-dpng',['/Users/dmossman/Box/2022 MSc Thesis Work/Visuals/MATLAB Echosounder Figures/',date,'Sept/Ping Averaged Profiles/Avg_Profiles_',date,'Sept_3.png'],'-r0')
+print(gcf,'-dpng',['/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Visuals/MATLAB Echosounder Figures/',date,'Sept/Ping Averaged Profiles/Avg_Profiles_',date,'Sept_3.png'],'-r0')
 clear g;
 
 close all;
@@ -303,7 +303,7 @@ close all;
 
 %% Save variables
 
-filename = strcat("/Users/dmossman/Box/2022 MSc Thesis Work/Processed_Data/",date,"Sept_Differencing_Data.mat");
+filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Processed_Data/",date,"Sept_Differencing_Data.mat");
 % filename = strcat("/Users/delphine/Documents/BoF2020_Cruise/Processed_Data/",date,"Sept_Differencing_Data_Seafloor_Corrected.mat");
 %fields = {'Tx','Ty','T','filename','HourlyAvgTemp','SoundSpeed','N','Range','TiltCorrRange','Sv','TS','seaAbs','Freq','Bins2Avg','Time2Avg','BurstInt','PingPerProfile','NumAcqPings','DataType'};
 %Output = rmfield(Output, fields);

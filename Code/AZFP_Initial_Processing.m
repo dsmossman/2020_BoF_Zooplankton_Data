@@ -2,10 +2,10 @@ clc
 clear variables
 close all
 
-addpath( genpath('/Users/dmossman/Box/2022 MSc Thesis Work/Code/AzfpMatlabToolbox_v18'))
-addpath( genpath('/Users/dmossman/Box/2022 MSc Thesis Work/Raw_Data'))
-addpath( genpath('/Users/dmossman/Box/2022 MSc Thesis Work/Processed_Data'))
-addpath( genpath('/Users/dmossman/Box/Glider Data/'))
+addpath( genpath('/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Code/AzfpMatlabToolbox_v18'))
+addpath( genpath('/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Raw_Data'))
+addpath( genpath('/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Processed_Data'))
+% addpath( genpath('/Users/Delphine/Box/Glider Data/'))
 
 % addpath( genpath('/Users/delphine/Documents/MATLAB'))
 % addpath( genpath('/Users/delphine/Documents/BoF2020_Cruise/Visuals'))
@@ -176,7 +176,7 @@ clear order
 % about 3 dB higher than 200 kHz seafloor values; therefore, try 
 % subtracting 3 dB from all 455 kHz values
 
-Output(3).Sv(:,:) = Output(3).Sv(:,:) - 3;
+% Output(3).Sv(:,:) = Output(3).Sv(:,:) - 3;
 
 % In addition, apply correction to all data to make it match up with Gina's
 % echosounder better based on the seafloor echoes
@@ -207,7 +207,7 @@ end
 % THIS MEANS YOU, GINA!!
 
 % load up the raw datafile downloaded from CEOTR
-load('C:\Users\dmossman\Box\2022 MSc Thesis Work\Raw_Data\Glider\cabot_20200919_119_delayed_83ef_60ad_f731.mat');
+load('C:\Users\Delphine\Documents\2020_BoF_Zooplankton_Data\Raw_Data\Glider\cabot_20200919_119_delayed_83ef_60ad_f731.mat');
 % load('cabot_20220727_158_delayed_83ef_60ad_f731.mat');
 
 % put that data into a nicely named variable
@@ -415,7 +415,7 @@ plot(centers, values,'LineWidth',2)
 sgtitle(strcat('Bottom Depth Sv Values (dB) for ',date, ' July 2022'));
 legend({'130 kHz','','200 kHz','','455 kHz','','769 kHz',''});
 
-% filename = strcat("/Users/dmossman/Box/2022 MSc Thesis Work/Visuals/MATLAB Echosounder Figures/",date,"Sept/Bott_Sv_Hist_Subplots",date,"Sept.png");
+% filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_DataVisuals/MATLAB Echosounder Figures/",date,"Sept/Bott_Sv_Hist_Subplots",date,"Sept.png");
 % print(gcf,'-dpng',filename,'-r0')
 % clear filename;
 
@@ -428,7 +428,7 @@ figure(2)
 histogram(bott_sv2(3,:) - bott_sv2(2,:))
 title(strcat('Difference Between 200 kHz and 455 kHz Bottom Depth Sv Values for',date,' September'))
 
-% filename = strcat("/Users/dmossman/Box/2022 MSc Thesis Work/Visuals/MATLAB Echosounder Figures/",date,"Sept/Bott_Sv_Hist_Diff_",date,"Sept.png");
+% filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_DataVisuals/MATLAB Echosounder Figures/",date,"Sept/Bott_Sv_Hist_Diff_",date,"Sept.png");
 % print(gcf,'-dpng',filename,'-r0')
 % clear filename;
 
@@ -497,7 +497,7 @@ xlabel('Bottom dB for 769 kHz')
 ylabel('Difference between bottom dB at 769 kHz and 455 kHz')
 
 
-% filename = strcat("/Users/dmossman/Box/2022 MSc Thesis Work/Visuals/MATLAB Echosounder Figures/",date,"Sept/Bott_Sv_Diff_Corr_",date,"Sept.png");
+% filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_DataVisuals/MATLAB Echosounder Figures/",date,"Sept/Bott_Sv_Diff_Corr_",date,"Sept.png");
 % print(gcf,'-dpng',filename,'-r0')
 % clear filename;
 
@@ -520,7 +520,7 @@ end
 % max(bott_sv3,[],2,'omitnan')
 
 %% Save variables
-filename = strcat('/Users/dmossman/Box/2022 MSc Thesis Work/Processed_Data/',date,"Sept_2020_Seafloor_Data.mat");
+filename = strcat('/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Processed_Data/',date,"Sept_2020_Seafloor_Data.mat");
 save(filename, 'bott_dep3','bott_ind3','bott_sv3');
 clear filename;
 
@@ -566,7 +566,7 @@ plot(centers, values,'LineWidth',2)
 sgtitle(strcat({'Bottom Depth Sv Values (dB) for '},date, {' August 2022'},{' and ping range < 20 m'}));
 legend({'130 kHz','','200 kHz','','455 kHz','','769 kHz',''});
 
-% filename = strcat("/Users/dmossman/Box/2022 MSc Thesis Work/Visuals/MATLAB Echosounder Figures/",date,"Sept/Bott_Sv_Hist_Low_Range_",date,"Sept.png");
+% filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_DataVisuals/MATLAB Echosounder Figures/",date,"Sept/Bott_Sv_Hist_Low_Range_",date,"Sept.png");
 % print(gcf,'-dpng',filename,'-r0')
 % clear filename;
 close all
@@ -744,7 +744,7 @@ end
 
 %% Save necessary variables
 
-filename = strcat("/Users/dmossman/Box/2022 MSc Thesis Work/Processed_Data/",date,"Sept_Processed_Data.mat");
+filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Processed_Data/",date,"Sept_Processed_Data.mat");
 save(filename, 'Output', 'P', 'Dive', 'dbins', 'cc', 'gliderdata', 'StartDive');
 clear filename;
 
@@ -796,7 +796,7 @@ h.Position(2) = 0.5-h.Position(4)/2;
 
 AddLetters2Plots(gcf,'VShift',-0.04)
 % save the figure
-filename = strcat("/Users/dmossman/Box/2022 MSc Thesis Work/Visuals/MATLAB Echosounder Figures/",date,"Sept/Frequencies_All_",date,"Sept.png");
+filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Visuals/MATLAB Echosounder Figures/",date,"Sept/Frequencies_All_",date,"Sept.png");
 print(gcf,'-dpng',filename,'-r0')
 
 clear filename;

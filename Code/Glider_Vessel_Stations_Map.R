@@ -1,12 +1,12 @@
 # Set working directory and libraries
 rm(list = ls())
 
-setwd("C:/Users/dmossman/Box/2022 MSc Thesis Work/")
+setwd("C:/Users/Delphine/Documents/2020_BoF_Zooplankton_Data")
 library(tidyverse)
 library(sp)
 library(sf)
 library(ggplot2)
-library(ggsn)
+library(ggspatial)
 library(dplyr)
 library(marmap)
 library(ggpubr)
@@ -174,18 +174,18 @@ Full_Plot = ggplot() +
   #   aesthetics = c("colour")
   # ) +
   
-  ggsn::scalebar(
-    data = reg,
-    location = "topright",
-    dist = 2,
-    dist_unit = "nm",
-    transform = TRUE,
-    model = "WGS84",
-    anchor = c(x = -66.25, y = 44.93),
-    height = 0.004,
-    st.dist = 0.005,
-    st.size = 5
-  ) +
+  # ggsn::scalebar(
+  #   data = reg,
+  #   location = "topright",
+  #   dist = 2,
+  #   dist_unit = "nm",
+  #   transform = TRUE,
+  #   model = "WGS84",
+  #   anchor = c(x = -66.25, y = 44.93),
+  #   height = 0.004,
+  #   st.dist = 0.005,
+  #   st.size = 5
+  # ) +
   
   labs(x = "Longitude",
        y = "Latitude",
@@ -254,40 +254,41 @@ Zoomed_Plot = ggplot() +
     aes(x = x, y = y, z = z),
     colour = NA,
     breaks = c(seq(
-      from = 0, to = 200, by = 10
+      from = 0, to = 250, by = 25
     )),
-    show.legend = FALSE
+    show.legend = T
   ) +
   scale_fill_grey(start = 0.9, end = 0.3) +
   
-  coord_quickmap(xlim = lons, ylim = lats, expand = TRUE) +
+  geom_sf(data=reg,fill="gray25",color="black", show.legend = F) +
+  
+  coord_sf(xlim = lons, ylim = lats, expand = FALSE) +
+  
+  annotation_scale(width_hint = 0.25, location = "t", style = "bar" ) +
   
   geom_path(
     data = Glider_Data[which(Glider_Data$Date == "20-Sep"),],
-    aes(x = Longitude, y = Latitude, colour = Date),
+    aes(x = Longitude, y = Latitude),
+    color = "black",
     alpha = 1,
-    linewidth = 0.9,
+    linewidth = 0.7,
     show.legend = FALSE
-  ) +
-  
-  scale_colour_manual(
-    values = c("#56B4E9"),
-    aesthetics = c("colour")
   ) +
   
   geom_path(
     data = OB_tracks[which(OB_tracks$Date == "20-Sep"),],
     aes(x = Lon, y = Lat, group = Track),
     alpha = 1,
-    linewidth = 0.7,
+    linewidth = 0.9,
     arrow = arrow(length = unit(8, "points"), ends = "last"),
+    color = "#56B4E9",
     show.legend = FALSE
   ) +
   
   geom_point(
     data = OB_cages[which(OB_cages$Date == "20-Sep"),],
     aes(x = Longitude, y = Latitude),
-    fill = "grey",
+    fill = "white",
     shape = 21,
     alpha = 0.7,
     show.legend = FALSE
@@ -299,19 +300,6 @@ Zoomed_Plot = ggplot() +
     hjust = "left",
     vjust = "top",
     size = 5
-  ) +
-  
-  ggsn::scalebar(
-    data = reg,
-    location = "topleft",
-    dist = 0.5,
-    dist_unit = "nm",
-    transform = TRUE,
-    model = "WGS84",
-    anchor = c(x = -66.818, y = 44.9),
-    height = 0.0002,
-    st.dist = 0.0005,
-    st.size = 4
   ) +
   
   labs(x = NULL,
@@ -343,9 +331,6 @@ ggarrange(
 )
 
 #####
-lons = c(-67,-66.2)
-lats = c(44.45, 44.95)
-
 GMB1 = Cage_Data %>% 
   filter(Station_Number %in% c(10,13,17)) %>%
   reframe(Latitude = mean(Latitude),Longitude=mean(Longitude))
@@ -368,6 +353,9 @@ OB3 = Cage_Data %>%
   reframe(Latitude = mean(Latitude),Longitude=mean(Longitude))
 OB_Stations = rbind(OB1,OB2,OB3)
 
+lons = c(-67,-66.2)
+lats = c(44.45, 44.95)
+
 Glider_Plot =
 ggplot() +
   
@@ -376,9 +364,9 @@ ggplot() +
     aes(x = x, y = y, z = z),
     colour = NA,
     breaks = c(seq(
-      from = 0, to = 250, by = 10
+      from = 0, to = 250, by = 25
     )),
-    show.legend = FALSE
+    show.legend = F
   ) +
   scale_fill_grey(start = 0.9, end = 0.3) +
   
@@ -405,18 +393,7 @@ ggplot() +
   geom_text(data=OB_Stations,aes(x=Longitude,y=Latitude,label=c("OB1","OB2","OB3")),
             size=4) +
   
-  ggsn::scalebar(
-    data = reg,
-    location = "topright",
-    dist = 2,
-    dist_unit = "nm",
-    transform = TRUE,
-    model = "WGS84",
-    anchor = c(x = -66.25, y = 44.92),
-    height = 0.002,
-    st.dist = 0.002,
-    st.size = 5
-  ) +
+  annotation_scale(width_hint = 0.25, location = "tr", style = "bar") +
   
   labs(x = "Longitude",
        y = "Latitude",
@@ -430,5 +407,28 @@ ggplot() +
         axis.title = element_text(size = 10)) +
   scale_y_continuous(breaks = c(44.50, 44.55, 44.60, 44.65, 44.70, 44.75, 44.8, 44.85, 44.90)) +
   scale_x_continuous(breaks = c(-66.9, -66.8, -66.7, -66.6, -66.5, -66.4, -66.3))
+print(Glider_Plot)
 
-ggarrange(Glider_Plot, Zoomed_Plot, ncol=2,labels="AUTO")
+Glider_Plot_With_Inset = ggdraw() +
+  draw_plot(Glider_Plot) +
+  draw_plot(Inset_Map, x = 0.75, y = 0.2, width = 0.2, height = 0.2)
+
+ggarrange(Glider_Plot_With_Inset, Zoomed_Plot, ncol = 2, common.legend = T, legend = "left")
+
+#####
+
+## Distance calculations
+
+Glider_Data_SF = Glider_Data %>%
+  st_as_sf(coords = c("Longitude", "Latitude"), crs = st_crs(reg)) %>%
+  group_by(Date) %>%
+  summarise(do_union = F) %>%
+  st_cast("LINESTRING")
+
+Station_Data_SF = Cage_Data %>%
+  st_as_sf(coords = c("Longitude", "Latitude"), crs = st_crs(reg))
+
+for(i in 1:nrow(Station_Data_SF)) {
+  Station_Data_SF$Dist_To_Glider[i] = st_distance(Station_Data_SF$geometry[i],
+                                               Glider_Data_SF$geometry[which(Glider_Data_SF$Date == Station_Data_SF$Date[i])])
+}

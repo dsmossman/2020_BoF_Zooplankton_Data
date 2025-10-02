@@ -317,10 +317,10 @@ end
 % which I need to correct for since glider dives are not separated by time;
 % they happen one after the other while the instrument is on
 
-for DD = 1:cc-1
-    Dive(DD).Index(2) = Dive(DD + 1).Index(1);
-end
-Dive(end).Index(2) = length(Output(1).Depth);
+% for DD = 1:cc-1
+%     Dive(DD).Index(2) = Dive(DD + 1).Index(1);
+% end
+% Dive(end).Index(2) = length(Output(1).Depth);
 %% KD added 31 August 2021: determine a maximum range for each frequency
 % Limit this analysis to only samples within a defined range.  Eyeball for
 % now but later Scott suggests:
@@ -357,219 +357,219 @@ for i = 1:4 % for each frequency
     % Output(i).PingDepth = Output(i).Range(1,:) + Output(1).Depth;
 end
 
-%% Make a histogram of the seafloor data decibel strengths
-
-% Find the seafloor indices
-for k=1:4 % for each frequency
-    % for j = 1:cc % for each dive
-        % first need to pull out sv and depths for each dive separately, so
-        % remove bottom does not delete too much data
-        sv = Output(k).Sv';
-        depth = Output(k).Depth';
-        % depth = Output(k).PingDepth';
-        
-        % next run the find bottom function
-        [bott_sv2(k,:), bott_dep2(k,:), bott_ind2(k,:)] = find_bottom(sv, depth);
-    % end
-end
-
-%%
-figure(1)
-
-% subplot(2,2,1)
-histogram(bott_sv2(1,:),'BinWidth',1,'FaceAlpha',0.5);
-hold on
-[values, edges] = histcounts(bott_sv2(1,:),'BinWidth', 1);
-centers = (edges(1:end-1)+edges(2:end))/2;
-plot(centers, values,'LineWidth',2)
-% hold off
-% title('130kHz')
+% %% Make a histogram of the seafloor data decibel strengths
 % 
-% subplot(2,2,2)
-histogram(bott_sv2(2,:), 'BinWidth',1,'FaceAlpha',0.5);
-hold on
-[values, edges] = histcounts(bott_sv2(2,:),'BinWidth', 1);
-centers = (edges(1:end-1)+edges(2:end))/2;
-plot(centers, values,'LineWidth',2)
-% hold off
-% title('200kHz')
+% % Find the seafloor indices
+% for k=1:4 % for each frequency
+%     % for j = 1:cc % for each dive
+%         % first need to pull out sv and depths for each dive separately, so
+%         % remove bottom does not delete too much data
+%         sv = Output(k).Sv';
+%         depth = Output(k).Depth';
+%         % depth = Output(k).PingDepth';
 % 
-% subplot(2,2,3)
-histogram(bott_sv2(3,:),'BinWidth',1,'FaceAlpha',0.5);
-hold on
-[values, edges] = histcounts(bott_sv2(3,:),'BinWidth', 1);
-centers = (edges(1:end-1)+edges(2:end))/2;
-plot(centers, values,'LineWidth',2)
-% hold off
-% title('455kHz')
+%         % next run the find bottom function
+%         [bott_sv2(k,:), bott_dep2(k,:), bott_ind2(k,:)] = find_bottom(sv, depth);
+%     % end
+% end
 % 
-% subplot(2,2,4)
-histogram(bott_sv2(4,:),'BinWidth',1,'FaceAlpha',0.5);
-hold on
-[values, edges] = histcounts(bott_sv2(4,:),'BinWidth', 1);
-centers = (edges(1:end-1)+edges(2:end))/2;
-plot(centers, values,'LineWidth',2)
-% hold off
-% title('769kHz')
-
-sgtitle(strcat('Bottom Depth Sv Values (dB) for ',date, ' July 2022'));
-legend({'130 kHz','','200 kHz','','455 kHz','','769 kHz',''});
-
-% filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_DataVisuals/MATLAB Echosounder Figures/",date,"Sept/Bott_Sv_Hist_Subplots",date,"Sept.png");
-% print(gcf,'-dpng',filename,'-r0')
+% %%
+% figure(1)
+% 
+% % subplot(2,2,1)
+% histogram(bott_sv2(1,:),'BinWidth',1,'FaceAlpha',0.5);
+% hold on
+% [values, edges] = histcounts(bott_sv2(1,:),'BinWidth', 1);
+% centers = (edges(1:end-1)+edges(2:end))/2;
+% plot(centers, values,'LineWidth',2)
+% % hold off
+% % title('130kHz')
+% % 
+% % subplot(2,2,2)
+% histogram(bott_sv2(2,:), 'BinWidth',1,'FaceAlpha',0.5);
+% hold on
+% [values, edges] = histcounts(bott_sv2(2,:),'BinWidth', 1);
+% centers = (edges(1:end-1)+edges(2:end))/2;
+% plot(centers, values,'LineWidth',2)
+% % hold off
+% % title('200kHz')
+% % 
+% % subplot(2,2,3)
+% histogram(bott_sv2(3,:),'BinWidth',1,'FaceAlpha',0.5);
+% hold on
+% [values, edges] = histcounts(bott_sv2(3,:),'BinWidth', 1);
+% centers = (edges(1:end-1)+edges(2:end))/2;
+% plot(centers, values,'LineWidth',2)
+% % hold off
+% % title('455kHz')
+% % 
+% % subplot(2,2,4)
+% histogram(bott_sv2(4,:),'BinWidth',1,'FaceAlpha',0.5);
+% hold on
+% [values, edges] = histcounts(bott_sv2(4,:),'BinWidth', 1);
+% centers = (edges(1:end-1)+edges(2:end))/2;
+% plot(centers, values,'LineWidth',2)
+% % hold off
+% % title('769kHz')
+% 
+% sgtitle(strcat('Bottom Depth Sv Values (dB) for ',date, ' July 2022'));
+% legend({'130 kHz','','200 kHz','','455 kHz','','769 kHz',''});
+% 
+% % filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_DataVisuals/MATLAB Echosounder Figures/",date,"Sept/Bott_Sv_Hist_Subplots",date,"Sept.png");
+% % print(gcf,'-dpng',filename,'-r0')
+% % clear filename;
+% 
+% %% Plot the histogram of differences between the 200 kHz and 455 kHz bottom values
+% % Also plot the difference as a function of 200 kHz Sv; should be white
+% % noise
+% % If it's not, then we have issues
+% %
+% figure(2)
+% histogram(bott_sv2(3,:) - bott_sv2(2,:))
+% title(strcat('Difference Between 200 kHz and 455 kHz Bottom Depth Sv Values for',date,' September'))
+% 
+% % filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_DataVisuals/MATLAB Echosounder Figures/",date,"Sept/Bott_Sv_Hist_Diff_",date,"Sept.png");
+% % print(gcf,'-dpng',filename,'-r0')
+% % clear filename;
+% 
+% %%
+% figure(3)
+% 
+% 
+% subplot(1,3,1)
+% scatter(bott_sv2(1,:), (bott_sv2(2,:) - bott_sv2(1,:)))
+% xlim([-25,10]);
+% ylim([-30, 30]);
+% h = lsline;
+% h.LineWidth = 2;
+% p2 = polyfit(get(h,'xdata'),get(h,'ydata'),1);
+% eqn = string("y = " + p2(1)) + "x + " + string(p2(2));
+% text(9,29,eqn,"HorizontalAlignment","right","VerticalAlignment","top");
+% 
+% a = bott_sv2(1,:)';
+% b = (bott_sv2(2,:) - bott_sv2(1,:))';
+% 
+% [rho, pval] = corr(a, b, 'Rows','complete');
+% text(9,27,string("Correlation coefficient rho: " + rho),"HorizontalAlignment","right","VerticalAlignment","top");
+% text(9,25,string("p-value: " + pval),"HorizontalAlignment","right","VerticalAlignment","top");
+% 
+% xlabel('Bottom dB for 130 kHz')
+% ylabel('Difference between bottom dB at 200 kHz and 130 kHz')
+% 
+% subplot(1,3,2)
+% scatter(bott_sv2(2,:), (bott_sv2(3,:) - bott_sv2(2,:)))
+% xlim([-25,10]);
+% ylim([-30, 30]);
+% h = lsline;
+% h.LineWidth = 2;
+% p2 = polyfit(get(h,'xdata'),get(h,'ydata'),1);
+% eqn = string("y = " + p2(1)) + "x + " + string(p2(2));
+% text(9,29,eqn,"HorizontalAlignment","right","VerticalAlignment","top");
+% 
+% a = bott_sv2(2,:)';
+% b = (bott_sv2(3,:) - bott_sv2(2,:))';
+% 
+% [rho, pval] = corr(a, b, 'Rows','complete');
+% text(9,27,string("Correlation coefficient rho: " + rho),"HorizontalAlignment","right","VerticalAlignment","top");
+% text(9,25,string("p-value: " + pval),"HorizontalAlignment","right","VerticalAlignment","top");
+% 
+% xlabel('Bottom dB for 455 kHz')
+% ylabel('Difference between bottom dB at 455 kHz and 200 kHz')
+% 
+% subplot(1,3,3)
+% scatter(bott_sv2(3,:), (bott_sv2(4,:) - bott_sv2(3,:)))
+% xlim([-25,10]);
+% ylim([-30, 30]);
+% h = lsline;
+% h.LineWidth = 2;
+% p2 = polyfit(get(h,'xdata'),get(h,'ydata'),1);
+% eqn = string("y = " + p2(1)) + "x + " + string(p2(2));
+% text(9,29,eqn,"HorizontalAlignment","right","VerticalAlignment","top");
+% 
+% a = bott_sv2(3,:)';
+% b = (bott_sv2(4,:) - bott_sv2(3,:))';
+% 
+% [rho, pval] = corr(a, b, 'Rows','complete');
+% text(9,27,string("Correlation coefficient rho: " + rho),"HorizontalAlignment","right","VerticalAlignment","top");
+% text(9,25,string("p-value: " + pval),"HorizontalAlignment","right","VerticalAlignment","top");
+% 
+% xlabel('Bottom dB for 769 kHz')
+% ylabel('Difference between bottom dB at 769 kHz and 455 kHz')
+% 
+% 
+% % filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_DataVisuals/MATLAB Echosounder Figures/",date,"Sept/Bott_Sv_Diff_Corr_",date,"Sept.png");
+% % print(gcf,'-dpng',filename,'-r0')
+% % clear filename;
+% 
+% %% Histogram of seafloor echoes all at same range
+% 
+% % Use only first ~1000 columns of Output data to make sure we are not
+% % capturing noise from 769 kHz accidentally
+% 
+% % Then use only data close to seafloor?
+% 
+% for k=1:4 % for each frequency
+%         sv = Output(k).Sv(:,1:402)';
+%         depth = Output(k).Depth(:,1:402)';
+% 
+%         % next run the find bottom function
+%         [bott_sv3(k,:), bott_dep3(k,:), bott_ind3(k,:)] = find_bottom(sv, depth);
+% end
+% 
+% % median(bott_sv3,2,'omitnan')
+% % max(bott_sv3,[],2,'omitnan')
+% 
+% %% Save variables
+% filename = strcat('/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Processed_Data/',date,"Sept_2020_Seafloor_Data.mat");
+% save(filename, 'bott_dep3','bott_ind3','bott_sv3');
 % clear filename;
-
-%% Plot the histogram of differences between the 200 kHz and 455 kHz bottom values
-% Also plot the difference as a function of 200 kHz Sv; should be white
-% noise
-% If it's not, then we have issues
-%
-figure(2)
-histogram(bott_sv2(3,:) - bott_sv2(2,:))
-title(strcat('Difference Between 200 kHz and 455 kHz Bottom Depth Sv Values for',date,' September'))
-
-% filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_DataVisuals/MATLAB Echosounder Figures/",date,"Sept/Bott_Sv_Hist_Diff_",date,"Sept.png");
-% print(gcf,'-dpng',filename,'-r0')
-% clear filename;
-
-%%
-figure(3)
-
-
-subplot(1,3,1)
-scatter(bott_sv2(1,:), (bott_sv2(2,:) - bott_sv2(1,:)))
-xlim([-25,10]);
-ylim([-30, 30]);
-h = lsline;
-h.LineWidth = 2;
-p2 = polyfit(get(h,'xdata'),get(h,'ydata'),1);
-eqn = string("y = " + p2(1)) + "x + " + string(p2(2));
-text(9,29,eqn,"HorizontalAlignment","right","VerticalAlignment","top");
-
-a = bott_sv2(1,:)';
-b = (bott_sv2(2,:) - bott_sv2(1,:))';
-
-[rho, pval] = corr(a, b, 'Rows','complete');
-text(9,27,string("Correlation coefficient rho: " + rho),"HorizontalAlignment","right","VerticalAlignment","top");
-text(9,25,string("p-value: " + pval),"HorizontalAlignment","right","VerticalAlignment","top");
-
-xlabel('Bottom dB for 130 kHz')
-ylabel('Difference between bottom dB at 200 kHz and 130 kHz')
-
-subplot(1,3,2)
-scatter(bott_sv2(2,:), (bott_sv2(3,:) - bott_sv2(2,:)))
-xlim([-25,10]);
-ylim([-30, 30]);
-h = lsline;
-h.LineWidth = 2;
-p2 = polyfit(get(h,'xdata'),get(h,'ydata'),1);
-eqn = string("y = " + p2(1)) + "x + " + string(p2(2));
-text(9,29,eqn,"HorizontalAlignment","right","VerticalAlignment","top");
-
-a = bott_sv2(2,:)';
-b = (bott_sv2(3,:) - bott_sv2(2,:))';
-
-[rho, pval] = corr(a, b, 'Rows','complete');
-text(9,27,string("Correlation coefficient rho: " + rho),"HorizontalAlignment","right","VerticalAlignment","top");
-text(9,25,string("p-value: " + pval),"HorizontalAlignment","right","VerticalAlignment","top");
-
-xlabel('Bottom dB for 455 kHz')
-ylabel('Difference between bottom dB at 455 kHz and 200 kHz')
-
-subplot(1,3,3)
-scatter(bott_sv2(3,:), (bott_sv2(4,:) - bott_sv2(3,:)))
-xlim([-25,10]);
-ylim([-30, 30]);
-h = lsline;
-h.LineWidth = 2;
-p2 = polyfit(get(h,'xdata'),get(h,'ydata'),1);
-eqn = string("y = " + p2(1)) + "x + " + string(p2(2));
-text(9,29,eqn,"HorizontalAlignment","right","VerticalAlignment","top");
-
-a = bott_sv2(3,:)';
-b = (bott_sv2(4,:) - bott_sv2(3,:))';
-
-[rho, pval] = corr(a, b, 'Rows','complete');
-text(9,27,string("Correlation coefficient rho: " + rho),"HorizontalAlignment","right","VerticalAlignment","top");
-text(9,25,string("p-value: " + pval),"HorizontalAlignment","right","VerticalAlignment","top");
-
-xlabel('Bottom dB for 769 kHz')
-ylabel('Difference between bottom dB at 769 kHz and 455 kHz')
-
-
-% filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_DataVisuals/MATLAB Echosounder Figures/",date,"Sept/Bott_Sv_Diff_Corr_",date,"Sept.png");
-% print(gcf,'-dpng',filename,'-r0')
-% clear filename;
-
-%% Histogram of seafloor echoes all at same range
-
-% Use only first ~1000 columns of Output data to make sure we are not
-% capturing noise from 769 kHz accidentally
-
-% Then use only data close to seafloor?
-
-for k=1:4 % for each frequency
-        sv = Output(k).Sv(:,1:402)';
-        depth = Output(k).Depth(:,1:402)';
-        
-        % next run the find bottom function
-        [bott_sv3(k,:), bott_dep3(k,:), bott_ind3(k,:)] = find_bottom(sv, depth);
-end
-
-% median(bott_sv3,2,'omitnan')
-% max(bott_sv3,[],2,'omitnan')
-
-%% Save variables
-filename = strcat('/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Processed_Data/',date,"Sept_2020_Seafloor_Data.mat");
-save(filename, 'bott_dep3','bott_ind3','bott_sv3');
-clear filename;
-
-%%
-figure(4)
-
-% subplot(2,2,1)
-histogram(bott_sv3(1,:),'BinWidth',1,'FaceAlpha',0.5);
-hold on
-[values, edges] = histcounts(bott_sv3(1,:),'BinWidth', 1);
-centers = (edges(1:end-1)+edges(2:end))/2;
-plot(centers, values,'LineWidth',2)
-% hold off
-% title('130kHz')
 % 
-% subplot(2,2,2)
-histogram(bott_sv3(2,:), 'BinWidth',1,'FaceAlpha',0.5);
-hold on
-[values, edges] = histcounts(bott_sv3(2,:),'BinWidth', 1);
-centers = (edges(1:end-1)+edges(2:end))/2;
-plot(centers, values,'LineWidth',2)
-% hold off
-% title('200kHz')
+% %%
+% figure(4)
 % 
-% subplot(2,2,3)
-histogram(bott_sv3(3,:),'BinWidth',1,'FaceAlpha',0.5);
-hold on
-[values, edges] = histcounts(bott_sv3(3,:),'BinWidth', 1);
-centers = (edges(1:end-1)+edges(2:end))/2;
-plot(centers, values,'LineWidth',2)
-% hold off
-% title('455kHz')
+% % subplot(2,2,1)
+% histogram(bott_sv3(1,:),'BinWidth',1,'FaceAlpha',0.5);
+% hold on
+% [values, edges] = histcounts(bott_sv3(1,:),'BinWidth', 1);
+% centers = (edges(1:end-1)+edges(2:end))/2;
+% plot(centers, values,'LineWidth',2)
+% % hold off
+% % title('130kHz')
+% % 
+% % subplot(2,2,2)
+% histogram(bott_sv3(2,:), 'BinWidth',1,'FaceAlpha',0.5);
+% hold on
+% [values, edges] = histcounts(bott_sv3(2,:),'BinWidth', 1);
+% centers = (edges(1:end-1)+edges(2:end))/2;
+% plot(centers, values,'LineWidth',2)
+% % hold off
+% % title('200kHz')
+% % 
+% % subplot(2,2,3)
+% histogram(bott_sv3(3,:),'BinWidth',1,'FaceAlpha',0.5);
+% hold on
+% [values, edges] = histcounts(bott_sv3(3,:),'BinWidth', 1);
+% centers = (edges(1:end-1)+edges(2:end))/2;
+% plot(centers, values,'LineWidth',2)
+% % hold off
+% % title('455kHz')
+% % 
+% % subplot(2,2,4)
+% histogram(bott_sv3(4,:),'BinWidth',1,'FaceAlpha',0.5);
+% hold on
+% [values, edges] = histcounts(bott_sv3(4,:),'BinWidth', 1);
+% centers = (edges(1:end-1)+edges(2:end))/2;
+% plot(centers, values,'LineWidth',2)
+% % hold off
+% % title('769kHz')
 % 
-% subplot(2,2,4)
-histogram(bott_sv3(4,:),'BinWidth',1,'FaceAlpha',0.5);
-hold on
-[values, edges] = histcounts(bott_sv3(4,:),'BinWidth', 1);
-centers = (edges(1:end-1)+edges(2:end))/2;
-plot(centers, values,'LineWidth',2)
-% hold off
-% title('769kHz')
-
-sgtitle(strcat({'Bottom Depth Sv Values (dB) for '},date, {' August 2022'},{' and ping range < 20 m'}));
-legend({'130 kHz','','200 kHz','','455 kHz','','769 kHz',''});
-
-% filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_DataVisuals/MATLAB Echosounder Figures/",date,"Sept/Bott_Sv_Hist_Low_Range_",date,"Sept.png");
-% print(gcf,'-dpng',filename,'-r0')
-% clear filename;
-close all
+% sgtitle(strcat({'Bottom Depth Sv Values (dB) for '},date, {' August 2022'},{' and ping range < 20 m'}));
+% legend({'130 kHz','','200 kHz','','455 kHz','','769 kHz',''});
+% 
+% % filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_DataVisuals/MATLAB Echosounder Figures/",date,"Sept/Bott_Sv_Hist_Low_Range_",date,"Sept.png");
+% % print(gcf,'-dpng',filename,'-r0')
+% % clear filename;
+% close all
 
 %% Find and remove seafloor data from each dive
 for k=1:4 % for each frequency
@@ -580,17 +580,18 @@ for k=1:4 % for each frequency
     %         depth = Output(1).Depth(Dive(j).Index(1):Dive(j).Index(2),:)';
     
     sv = Output(k).Sv';
-    depth = Output(1).Depth';
+    depth = Output(k).Depth';
     % depth = Output(1).PingDepth';
     
     % next run the find and remove bottom functions to delete all data
     % at or below the seafloor
-    [bott_sv, bott_dep, bott_ind] = find_bottom(sv, depth);
-    sv_nb = removeBottom(sv,bott_sv,bott_ind);
+    [bott_sv(k,:), bott_dep(k,:), bott_ind(k,:)] = find_bottom(sv, depth);
+    sv_nb = removeBottom(sv,bott_sv(k,:),bott_ind(k,:));
     
     % finally, reinsert the data with the seafloor removed into the
     % original Output file
     % Output(k).Sv(Dive(j).Index(1):Dive(j).Index(2),:) = sv_nb';
+    
     Output(k).Sv = sv_nb';
     %end
 end
@@ -748,43 +749,114 @@ filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Processed
 save(filename, 'Output', 'P', 'Dive', 'dbins', 'cc', 'gliderdata', 'StartDive');
 clear filename;
 
+%% Bottom depth line cleanup for Sept 21st figure
+
+if date == "21"
+    bott_dep(:,1905:1951) = NaN;
+    P(1).avg_sv(1905:1951,:) = NaN;
+    P(2).avg_sv(1905:1951,:) = NaN;
+    P(3).avg_sv(1905:1951,:) = NaN;
+    P(4).avg_sv(1905:1951,:) = NaN;
+
+    bott_dep(:,2975:3017) = NaN;
+    P(1).avg_sv(2975:3017,:) = NaN;
+    P(2).avg_sv(2975:3017,:) = NaN;
+    P(3).avg_sv(2975:3017,:) = NaN;
+    P(4).avg_sv(2975:3017,:) = NaN;
+
+    bott_dep(:,4094:4133) = NaN;
+    P(1).avg_sv(4094:4133,:) = NaN;
+    P(2).avg_sv(4094:4133,:) = NaN;
+    P(3).avg_sv(4094:4133,:) = NaN;
+    P(4).avg_sv(4094:4133,:) = NaN;
+
+    bott_dep(:,5213:5256) = NaN;
+    P(1).avg_sv(5213:5256,:) = NaN;
+    P(2).avg_sv(5213:5256,:) = NaN;
+    P(3).avg_sv(5213:5256,:) = NaN;
+    P(4).avg_sv(5213:5256,:) = NaN;
+
+    bott_dep(:,6268:6307) = NaN;
+    P(1).avg_sv(6268:6307,:) = NaN;
+    P(2).avg_sv(6268:6307,:) = NaN;
+    P(3).avg_sv(6268:6307,:) = NaN;
+    P(4).avg_sv(6268:6307,:) = NaN;
+
+    bott_dep(:,7284:end) = NaN;
+    P(1).avg_sv(7284:end,:) = NaN;
+    P(2).avg_sv(7284:end,:) = NaN;
+    P(3).avg_sv(7284:end,:) = NaN;
+    P(4).avg_sv(7284:end,:) = NaN;
+end
+
 %% Create ping by depth figure with color scale corresponding to Sv for all four frequencies
 figure(1)
 
 subplot(2,2,1)
+% figure
 imagesc([NaN * ones(5, size(P(1).avg_sv, 1)); 10*log10(abs(P(1).avg_sv'))],'AlphaData',~isnan([NaN * ones(5, size(P(1).avg_sv, 1)); 10*log10(abs(P(1).avg_sv'))])) % conversion back to decibels + dealing with the fact that we cut off the first 5 m of data
-colormap('jet');
-caxis([-80 -40]);
+colormap('parula');
+caxis([-80 -50]);
 % set(gca, 'Xdir', 'reverse');
-xlabel('Ping Number')
+xlabel('Time')
 ylabel('Depth (m)')
+ylim([0,200])
 title('130 kHz')
+xt = get(gca,'XTick');
+xtlbl = [];
+for i = 1:numel(xt)
+    temp = Output(1).Date(xt(i));
+    temp = datetime(temp, 'ConvertFrom','datenum','Format','HH:mm');
+    temp = char(temp);
+    xtlbl = [xtlbl;temp];
+end
+
+set(gca, 'XTick',xt, 'XTickLabel',xtlbl, 'XTickLabelRotation',30)
+hold on
+line(1:length(bott_dep),bott_dep(1,1:length(bott_dep)),'Color','m','LineWidth',1)
+hold off
 
 subplot(2,2,2)
 imagesc([NaN * ones(5, size(P(2).avg_sv, 1)); 10*log10(abs(P(2).avg_sv'))],'AlphaData',~isnan([NaN * ones(5, size(P(2).avg_sv, 1)); 10*log10(abs(P(2).avg_sv'))]))
-colormap('jet');
-caxis([-80 -40]);
+colormap('parula');
+caxis([-80 -50]);
 % set(gca, 'Xdir', 'reverse');
 xlabel('Ping Number')
 ylabel('Depth (m)')
+ylim([0,200])
 title('200 kHz')
+set(gca, 'XTick',xt, 'XTickLabel',xtlbl, 'XTickLabelRotation',30)
+hold on
+line(1:length(bott_dep),bott_dep(2,1:length(bott_dep)),'Color','m','LineWidth',1)
+hold off
 
 subplot(2,2,3)
 imagesc([NaN * ones(5, size(P(3).avg_sv, 1)); 10*log10(abs(P(3).avg_sv'))],'AlphaData',~isnan([NaN * ones(5, size(P(3).avg_sv, 1)); 10*log10(abs(P(3).avg_sv'))])) 
-colormap('jet');
-caxis([-80 -40]);
+colormap('parula');
+caxis([-80 -50]);
 % set(gca, 'Xdir', 'reverse');
 xlabel('Ping Number')
 ylabel('Depth (m)')
+ylim([0,200])
 title('455 kHz')
+set(gca, 'XTick',xt, 'XTickLabel',xtlbl, 'XTickLabelRotation',30)
+hold on
+line(1:length(bott_dep),bott_dep(3,1:length(bott_dep)),'Color','m','LineWidth',1)
+hold off
 
 subplot(2,2,4)
 imagesc([NaN * ones(5, size(P(4).avg_sv, 1)); 10*log10(abs(P(4).avg_sv'))],'AlphaData',~isnan([NaN * ones(5, size(P(4).avg_sv, 1)); 10*log10(abs(P(4).avg_sv'))]))
-caxis([-80 -40]);
+colormap('parula');
+caxis([-80 -50]);
 % set(gca, 'Xdir', 'reverse');
 xlabel('Ping Number')
 ylabel('Depth (m)')
+ylim([0,200])
 title('769 kHz')
+set(gca, 'XTick',xt, 'XTickLabel',xtlbl, 'XTickLabelRotation',30)
+hold on
+line(1:length(bott_dep),bott_dep(4,1:length(bott_dep)),'Color','m','LineWidth',1)
+hold off
 
 % single colorbar for all four plots
 h = colorbar;
@@ -800,7 +872,7 @@ filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Visuals/M
 print(gcf,'-dpng',filename,'-r0')
 
 clear filename;
-% close;
+%close
 
 %%
 % 

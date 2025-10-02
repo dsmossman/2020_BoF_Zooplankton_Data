@@ -235,7 +235,7 @@ ba_prf = st_prf %>%
     # C5_upper_2 = OPC_to_C5(upper,speed),
     # C5_lower_2 = OPC_to_C5(lower,speed)
   )
-ba_prf$C5_lower_2[is.nan(ba_prf$C5_lower_2)] = 0
+# ba_prf$C5_lower_2[is.nan(ba_prf$C5_lower_2)] = 0
 
 ba_prf_b = st_prf_b %>%
   group_by(depth, basin) %>%
@@ -351,4 +351,8 @@ plot + labs(title = "Grand Manan Basin OPC Histogram") +
 
 ggsave(filename = "GMB_OPC_Histogram.png", path = figure_dir, width = 12, height = 6, units = "in")
 
-
+# variance of basin averages
+ba_prf %>%
+  group_by(basin) %>%
+  filter(depth %in% seq(80,195,5)) %>%
+  reframe(var(m))

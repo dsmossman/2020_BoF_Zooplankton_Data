@@ -4,18 +4,18 @@
 
 clear variables
 close all
-addpath( genpath('/Users/dmossman/Box/2022 MSc Thesis Work/Code/AzfpMatlabToolbox_v18'))
-addpath( genpath('/Users/dmossman/Box/2022 MSc Thesis Work/Raw_Data'))
-addpath( genpath('/Users/dmossman/Box/2022 MSc Thesis Work/Processed_Data'))
+addpath( genpath('/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Code/AzfpMatlabToolbox_v18'))
+addpath( genpath('/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Raw_Data'))
+addpath( genpath('/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Processed_Data'))
 addpath( genpath('/Users/dmossman/Box/Glider Data/'))
 
 date = input('Enter the numerical day of the data: ','s');
 
-filename = strcat("/Users/dmossman/Box/2022 MSc Thesis Work/Processed_Data/",date,"Sept_Processed_Data.mat");
+filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Processed_Data/",date,"Sept_Processed_Data.mat");
 load(filename);
 clear filename;
 
-filename = strcat("/Users/dmossman/Box/2022 MSc Thesis Work/Processed_Data/",date,"Sept_Differencing_Data.mat");
+filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Processed_Data/",date,"Sept_Differencing_Data.mat");
 load(filename);
 clear filename;
 %% Create full matrix of masked Sv
@@ -72,10 +72,10 @@ title('200kHz =< 455kHz')
 
 % Controlled parameter tuning based on MultiNet data
 % Do correlations with windows in 200-455 kHz of 1 dB, 5 dB, 10 dB
-% dB_Diff_Lower = [7.4, 13.7, 7.8];
-dB_Diff_Lower = [7.4, 16.1, 7.8];
-% dB_Diff_Upper = [7.5, 14.2, 8.8];
-dB_Diff_Upper = [7.5, 19.6, 8.8];
+dB_Diff_Lower = [7.4, 13.7, 7.8];
+% dB_Diff_Lower = [7.4, 16.1, 7.8];
+dB_Diff_Upper = [7.5, 14.2, 8.8];
+% dB_Diff_Upper = [7.5, 19.6, 8.8];
 
 % is the 455 kHz data "real" or just noise? Calibration issues? Offset or
 % dynamic range
@@ -130,17 +130,17 @@ figure(1)
 % title('130kHz')
 
 subplot(2,2,1)
-imagesc([NaN * ones(5, size(P(2).avg_sv, 1)); 10 * log10(abs(P(2).avg_sv'))])
-colormap('jet');
-caxis([-80 -40]);
+imagesc([NaN * ones(5, size(P(2).avg_sv, 1)); 10 * log10(abs(P(2).avg_sv'))],'AlphaData',~isnan([NaN * ones(5, size(P(2).avg_sv, 1)); 10*log10(abs(P(2).avg_sv'))]))
+colormap('parula');
+caxis([-80 -50]);
 xlabel('Ping Number')
 ylabel('Depth (m)')
 title('200kHz unmasked')
 
 subplot(2,2,3)
-imagesc([NaN * ones(5, size(P(3).avg_sv, 1)); 10 * log10(abs(P(3).avg_sv'))])
-colormap('jet');
-caxis([-80 -40]);
+imagesc([NaN * ones(5, size(P(3).avg_sv, 1)); 10 * log10(abs(P(3).avg_sv'))],'AlphaData',~isnan([NaN * ones(5, size(P(3).avg_sv, 1)); 10*log10(abs(P(3).avg_sv'))]))
+colormap('parula');
+caxis([-80 -50]);
 xlabel('Ping Number')
 ylabel('Depth (m)')
 title('455kHz unmasked')
@@ -150,15 +150,15 @@ imagesc([NaN * ones(5, size(PDiff(2).mask, 1)); PDiff(2).mask']);
 colormap('gray');
 xlabel('Ping Number')
 ylabel('Depth')
-title('455kHz masking matrix')
+title('455kHz filtering matrix')
 
 subplot(2,2,4)
-imagesc([NaN * ones(5, size(P(3).masked, 1)); 10 * log10(abs(P(3).masked'))])
-colormap('jet');
-caxis([-80 -40]);
+imagesc([NaN * ones(5, size(P(3).masked, 1)); 10 * log10(abs(P(3).masked'))],'AlphaData',~isnan([NaN * ones(5, size(P(3).masked, 1)); 10*log10(abs(P(3).masked'))]))
+colormap('parula');
+caxis([-80 -50]);
 xlabel('Ping Number')
 ylabel('Depth (m)')
-title('455kHz masked')
+title('455kHz filtered')
 
 colormap(ax1,gray);
 
@@ -174,15 +174,15 @@ AddLetters2Plots(gcf,'VShift',-0.03,'Direction','TopDown')
 sgtitle(strcat("Decibel Window Used: ",num2str(dB_Diff_Lower(2))," - ",num2str(dB_Diff_Upper(2))));
 
 %% save figure
-% filename = strcat("/Users/delphine/Documents/BoF2020_Cruise/Visuals/MATLAB Echosounder Figures/",date,"Sept/Unmasked_Masked_Comparison_",date,"Sept.png");
-% filename = strcat("/Users/delphine/Documents/BoF2020_Cruise/Visuals/MATLAB Echosounder Figures/",...
+filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Visuals/MATLAB Echosounder Figures/",date,"Sept/Unmasked_Masked_Comparison_",date,"Sept.png");
+% filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Visuals/MATLAB Echosounder Figures/",...
 %     date,...
-%     "Sept/Unmasked_Masked_Comparison_10_dB_",...
+%     "Sept/Unmasked_Masked_Comparison_10_dB_window_",...
 %     date,...
 %     "Sept.png");
-% print(gcf,'-dpng',filename,'-r0')
-% clear filename
+print(gcf,'-dpng',filename,'-r0')
+clear filename
 close all
 %% save files
-filename = strcat("/Users/dmossman/Box/2022 MSc Thesis Work/Processed_Data/",date,"Sept_Masking_Data.mat");
+filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Processed_Data/",date,"Sept_Masking_Data.mat");
 save(filename, 'Output', 'P', 'Dive', 'Diff', 'DiveDiff', 'PDiff');

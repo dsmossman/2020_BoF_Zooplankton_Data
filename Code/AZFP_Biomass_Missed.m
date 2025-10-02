@@ -5,26 +5,26 @@
 clc
 clear variables
 close all
-addpath( genpath('/Users/dmossman/Box/2022 MSc Thesis Work/Code/AzfpMatlabToolbox_v18'))
-addpath( genpath('/Users/dmossman/Box/2022 MSc Thesis Work/Raw_Data'))
-addpath( genpath('/Users/dmossman/Box/2022 MSc Thesis Work/Processed_Data'))
+addpath( genpath('/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Code/AzfpMatlabToolbox_v18'))
+addpath( genpath('/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Raw_Data'))
+addpath( genpath('/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Processed_Data'))
 addpath( genpath('/Users/dmossman/Box/Glider Data/'))
 
 date = input('Enter the numerical day of the data: ','s');
 
-filename = strcat("/Users/dmossman/Box/2022 MSc Thesis Work/Processed_Data/",date,"Sept_Masking_Data.mat");
+filename = strcat("/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Processed_Data/",date,"Sept_Masking_Data.mat");
 load(filename);
 clear filename;
 
 %% Load up data on seafloor depth/echo indices
 
-filename = strcat('/Users/dmossman/Box/2022 MSc Thesis Work/Processed_Data/',date,"Sept_2020_Seafloor_Data.mat");
+filename = strcat('/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Processed_Data/',date,"Sept_2020_Seafloor_Data.mat");
 load(filename);
 clear filename;
 
 bottom_dep = floor(mean(bott_dep3(3,:),'omitnan'));
 
-% distance above seafloor, the threshold
+%% distance above seafloor, the threshold
 d = 5;
 
 %% Get masked data that is below threshold overall

@@ -264,13 +264,13 @@ values3 = ddply(correlation_masked_sv, .(Frequency, Community_Comp), summarise,
 
 detach("package:plyr")
 
-result = manova(cbind(Multi_Sv, Echo_Masked_Sv) ~ Frequency * Community_Comp,
+result = manova(cbind(Multi_Sv, Echo_Masked_Sv) ~ Frequency * Basin,
                 data = correlation_masked_sv)
 summary(result)
 (summary.aov(result)[[" Response Multi_Sv"]])
 (summary.aov(result)[[" Response Echo_Masked_Sv"]])
 
-models = correlation_masked_sv %>% group_by(Community_Comp, Frequency) %>% do(model = summary(lm(Multi_Sv ~ Echo_Masked_Sv, data = .)))
+models = correlation_masked_sv %>% group_by(Frequency) %>% do(model = summary(lm(Multi_Sv ~ Echo_Masked_Sv, data = .)))
 
 for(i in 1:length(models$model)){
   print(paste0(models[[1]][i], ": "))
@@ -517,7 +517,7 @@ ddply(correlation_cfin, .(Frequency, Community_Comp), summarise,
 )
 detach("package:plyr")
 
-result = manova(cbind(Cfin_Sv, Echo_Masked_Sv) ~ Frequency * Community_Comp,
+result = manova(cbind(Cfin_Sv, Echo_Masked_Sv) ~ Frequency * Basin,
                 data = correlation_cfin)
 summary(result)
 (summary.aov(result)[[" Response Cfin_Sv"]])
@@ -540,8 +540,8 @@ for(i in 1:length(models$model)){
 
 models = correlation_cfin %>% 
   ungroup() %>%
-  group_by(Basin, Frequency) %>% 
-  # filter(Echo_Masked_Sv > median(Echo_Masked_Sv)) %>%
+  group_by(Frequency) %>% 
+  filter(Echo_Masked_Sv > median(Echo_Masked_Sv)) %>%
   do(model = (lm(Cfin_Sv ~ Echo_Masked_Sv, data = .))) %>%
   ungroup()
 

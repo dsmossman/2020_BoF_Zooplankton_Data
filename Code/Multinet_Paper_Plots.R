@@ -39,7 +39,7 @@ trace(opc_speed,edit=T)
 
 ## Edit the opc_abundance function to include speed calculation
 ## Uncomment below and copy, then recomment
-
+# 
 # function (df, dz = 2, min_size = 1, max_size = 4, good_only = TRUE,
 #           reject_volume = TRUE)
 # {
@@ -1116,10 +1116,10 @@ GMB_Shallow_Abundance_Plot = ggplot(data=GMB_Shallow, aes(x=factor(Depth_Bin))) 
   geom_col(aes(y=OPC_Concentration)) +
   geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
   scale_x_discrete(limits=rev,breaks=GMB_Shallow$Depth_Bin[c(seq(1,40,3))]) +
-  scale_y_continuous(limits = c(0, 5000)) +
-  scale_y_break(breaks = c(1000,1001), scales = 0.25, ticklabels=seq(2000, 4000, 2000), expand = F) +
-  # scale_y_continuous(limits = c(0,40000)) +
-  # scale_y_break(breaks = c(5999,6000),scales=0.25,ticklabels=seq(15000,35000,20000), expand = F) +
+  # scale_y_continuous(limits = c(0, 5000)) +
+  # scale_y_break(breaks = c(1000,1001), scales = 0.25, ticklabels=seq(2000, 4000, 2000), expand = F) +
+  scale_y_continuous(limits = c(0,40000)) +
+  scale_y_break(breaks = c(5999,6000),scales=0.25,ticklabels=seq(15000,35000,20000), expand = F) +
   coord_flip() +
   theme_bw() +
   theme(panel.grid = element_blank(),
@@ -1138,10 +1138,10 @@ GMB_Mid_Abundance_Plot = ggplot(data=GMB_Mid, aes(x=factor(Depth_Bin))) +
   geom_col(aes(y=OPC_Concentration)) +
   geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
   scale_x_discrete(limits=rev,breaks=GMB_Mid$Depth_Bin[c(seq(1,40,3))]) +
-  scale_y_continuous(limits = c(0, 5000)) +
-  scale_y_break(breaks = c(1000,1001), scales = 0.25, ticklabels=seq(2000, 4000, 2000), expand = F) +
-  # scale_y_continuous(limits = c(0,40000)) +
-  # scale_y_break(breaks = c(5999,6000),scales=0.25,ticklabels=seq(15000,35000,20000), expand = F) +
+  # scale_y_continuous(limits = c(0, 5000)) +
+  # scale_y_break(breaks = c(1000,1001), scales = 0.25, ticklabels=seq(2000, 4000, 2000), expand = F) +
+  scale_y_continuous(limits = c(0,40000)) +
+  scale_y_break(breaks = c(5999,6000),scales=0.25,ticklabels=seq(15000,35000,20000), expand = F) +
   coord_flip() +
   theme_bw() +
   theme(panel.grid = element_blank(),
@@ -1163,10 +1163,10 @@ GMB_Deep_Abundance_Plot = ggplot(data=GMB_Deep, aes(x=factor(Depth_Bin))) +
   geom_col(aes(y=OPC_Concentration)) +
   geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
   scale_x_discrete(limits=rev,breaks=GMB_Deep$Depth_Bin[c(seq(1,40,3))]) +
-  scale_y_continuous(limits = c(0, 5000)) +
-  scale_y_break(breaks = c(1000,1001), scales = 0.25, ticklabels=seq(2000, 4000, 2000), expand = F) +
-  # scale_y_continuous(limits = c(0,40000)) +
-  # scale_y_break(breaks = c(5999,6000),scales=0.25,ticklabels=seq(15000,35000,20000), expand = F) +
+  # scale_y_continuous(limits = c(0, 5000)) +
+  # scale_y_break(breaks = c(1000,1001), scales = 0.25, ticklabels=seq(2000, 4000, 2000), expand = F) +
+  scale_y_continuous(limits = c(0,40000)) +
+  scale_y_break(breaks = c(5999,6000),scales=0.25,ticklabels=seq(15000,35000,20000), expand = F) +
   coord_flip() +
   theme_bw() +
   theme(panel.grid = element_blank(),
@@ -1223,10 +1223,10 @@ OB_Shallow_Abundance_Plot = ggplot(data=OB_Shallow, aes(x=factor(Depth_Bin))) +
   geom_col(aes(y=OPC_Concentration)) +
   geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
   scale_x_discrete(limits=rev,breaks=OB_Shallow$Depth_Bin[c(seq(1,40,3))]) +
-  scale_y_continuous(limits = c(0, 5000)) +
-  scale_y_break(breaks = c(1000,1001), scales = 0.25, ticklabels=seq(2000, 4000, 2000), expand = F) +
-  # scale_y_continuous(limits = c(0,40000)) +
-  # scale_y_break(breaks = c(5999,6000),scales=0.25,ticklabels=seq(15000,35000,20000), expand = F) +
+  # scale_y_continuous(limits = c(0, 5000)) +
+  # scale_y_break(breaks = c(1000,1001), scales = 0.25, ticklabels=seq(2000, 4000, 2000), expand = F) +
+  scale_y_continuous(limits = c(0,40000)) +
+  scale_y_break(breaks = c(5999,6000),scales=0.25,ticklabels=seq(15000,35000,20000), expand = F) +
   coord_flip() +
   theme_bw() +
   theme(panel.grid = element_blank(),
@@ -1246,10 +1246,10 @@ OB_Mid_Abundance_Plot = ggplot(data=OB_Mid, aes(x=factor(Depth_Bin))) +
   geom_col(aes(y=OPC_Concentration)) +
   geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
   scale_x_discrete(limits=rev,breaks=OB_Mid$Depth_Bin[c(seq(1,40,3))]) +
-  scale_y_continuous(limits = c(0, 5000)) +
-  scale_y_break(breaks = c(1000,1001), scales = 0.25, ticklabels=seq(2000, 4000, 2000), expand = F) +
-  # scale_y_continuous(limits = c(0,40000)) +
-  # scale_y_break(breaks = c(5999,6000),scales=0.25,ticklabels=seq(15000,35000,20000), expand = F) +
+  # scale_y_continuous(limits = c(0, 5000)) +
+  # scale_y_break(breaks = c(1000,1001), scales = 0.25, ticklabels=seq(2000, 4000, 2000), expand = F) +
+  scale_y_continuous(limits = c(0,40000)) +
+  scale_y_break(breaks = c(5999,6000),scales=0.25,ticklabels=seq(15000,35000,20000), expand = F) +
   coord_flip() +
   theme_bw() +
   theme(panel.grid = element_blank(),
@@ -1300,10 +1300,10 @@ OB_Deep_Abundance_Plot = ggplot(data=OB_Deep, aes(x=factor(Depth_Bin))) +
   geom_col(aes(y=OPC_Concentration)) +
   geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
   scale_x_discrete(limits=rev,breaks=OB_Deep$Depth_Bin[c(seq(1,40,3))]) +
-  scale_y_continuous(limits = c(0, 5000)) +
-  scale_y_break(breaks = c(1000,1001), scales = 0.25, ticklabels=seq(2000, 4000, 2000), expand = F) +
-  # scale_y_continuous(limits = c(0,40000)) +
-  # scale_y_break(breaks = c(5999,6000),scales=0.25,ticklabels=seq(15000,35000,20000), expand = F) +
+  # scale_y_continuous(limits = c(0, 5000)) +
+  # scale_y_break(breaks = c(1000,1001), scales = 0.25, ticklabels=seq(2000, 4000, 2000), expand = F) +
+  scale_y_continuous(limits = c(0,40000)) +
+  scale_y_break(breaks = c(5999,6000),scales=0.25,ticklabels=seq(15000,35000,20000), expand = F) +
   coord_flip() +
   theme_bw() +
   theme(panel.grid = element_blank(),
@@ -1377,14 +1377,14 @@ Echo_Concentration = data.frame(Depth = rep(temp$Depth_Bin, times=4),
 Echo_Concentration$Concentration[is.nan(Echo_Concentration$Concentration)] = 0
 
 GMB_Shallow_Abundance_Plot_Sv = GMB_Shallow_Abundance_Plot +
-  geom_line(data=Echo_Concentration[Echo_Concentration$Equation != "No correction",],aes(x=Depth,y=Concentration,group=Equation,color=Equation, linetype = Equation),linewidth=1) +
+  geom_line(data=Echo_Concentration,aes(x=Depth,y=Concentration,group=Equation,color=Equation, linetype = Equation),linewidth=1) +
   scale_color_viridis_d(labels=c("Slope = 1","Top 50% of Echo Data","All Echo Data","No Correction")) +
   scale_linetype(labels=c("Slope = 1","Top 50% of Echo Data","All Echo Data","No Correction")) +
   theme(legend.position = "none") +
   theme(text = element_text(size=16),
         axis.text.x.bottom = element_text(hjust=1, angle=45))
 fname=paste0(figure_dir,"GMB_Shallow_Abundance_Comparison_Sv_Corrected_Only.png")
-ggsave(file=fname,scale=2)
+# ggsave(file=fname,scale=2)
 
 temp = echo_grouped_sv[,c(1,8,13)] %>% 
   reframe(Depth_Bin = Depth_Bin, Mean_Sv = rowMeans(select(., 2:3), na.rm = TRUE))
@@ -1402,14 +1402,14 @@ Echo_Concentration = data.frame(Depth = rep(temp$Depth_Bin, times=4),
 Echo_Concentration$Concentration[is.nan(Echo_Concentration$Concentration)] = 0
 
 GMB_Mid_Abundance_Plot_Sv = GMB_Mid_Abundance_Plot +
-  geom_line(data=Echo_Concentration[Echo_Concentration$Equation != "No correction",],aes(x=Depth,y=Concentration,group=Equation,color=Equation, linetype = Equation),linewidth=1) +
+  geom_line(data=Echo_Concentration,aes(x=Depth,y=Concentration,group=Equation,color=Equation, linetype = Equation),linewidth=1) +
   scale_color_viridis_d(labels=c("Slope = 1","Top 50% of Echo Data","All Echo Data", "No Correction")) +
   scale_linetype(labels=c("Slope = 1","Top 50% of Echo Data","All Echo Data","No Correction")) +
   theme(legend.position = "none") +
   theme(text = element_text(size=16),
         axis.text.x.bottom = element_text(hjust=1, angle=45))
 fname=paste0(figure_dir,"GMB_Mid_Abundance_Comparison_Sv_Corrected_Only.png")
-ggsave(file=fname,scale=2)
+# ggsave(file=fname,scale=2)
 
 temp = echo_grouped_sv[,c(1,7,10,12)] %>% 
   reframe(Depth_Bin = Depth_Bin, Mean_Sv = rowMeans(select(., 2:4), na.rm = TRUE))
@@ -1427,24 +1427,26 @@ Echo_Concentration = data.frame(Depth = rep(temp$Depth_Bin, times=4),
 Echo_Concentration$Concentration[is.nan(Echo_Concentration$Concentration)] = 0
 
 GMB_Deep_Abundance_Plot_Sv = GMB_Deep_Abundance_Plot +
-  geom_line(data=Echo_Concentration[Echo_Concentration$Equation != "No correction",],aes(x=Depth,y=Concentration,group=Equation,color=Equation, linetype = Equation),linewidth=1) +
+  geom_line(data=Echo_Concentration,aes(x=Depth,y=Concentration,group=Equation,color=Equation, linetype = Equation),linewidth=1) +
   scale_color_viridis_d(labels=c("Slope = 1","Top 50% of Echo Data","All Echo Data", "No Correction")) +
   scale_linetype(labels=c("Slope = 1","Top 50% of Echo Data","All Echo Data","No Correction")) +
   # theme(legend.position = "none") +
   theme(text = element_text(size=16),
         axis.text.x.bottom = element_text(hjust=1, angle=45))
 fname=paste0(figure_dir,"GMB_Deep_Abundance_Comparison_Sv_Corrected_Only.png")
-ggsave(file=fname,scale=2)
+# ggsave(file=fname,scale=2)
 
 cfin_correction_1 = function(sv) {
-  10^(((sv - slope_1_intercept)- cfin_TS)/10)
+  10^(((sv + slope_1_intercept)- cfin_TS)/10)
 }
 
-echo_grouped_sv %>% 
-  select(c(9,11,14,8,13,7,10,12)) %>%
-  mutate(across(1:8, cfin_correction_1)) %>%
-  filter(row_number() >= 17) %>%
-  reframe(sd(as.matrix(.),na.rm=T))
+cfin_correction_2 = function(sv) {
+  10^(((top_50_slope * sv + top_50_intercept)- cfin_TS)/10)
+}
+
+cfin_correction_3 = function(sv) {
+  10^(((all_data_slope * sv + all_data_intercept)- cfin_TS)/10)
+}
 
 temp = echo_grouped_sv[,c(1,4,17)] %>% 
   reframe(Depth_Bin = Depth_Bin, Mean_Sv = rowMeans(select(., 2:3), na.rm = TRUE))
@@ -1462,14 +1464,14 @@ Echo_Concentration = data.frame(Depth = rep(temp$Depth_Bin, times=4),
 Echo_Concentration$Concentration[is.nan(Echo_Concentration$Concentration)] = 0
 
 OB_Shallow_Abundance_Plot_Sv = OB_Shallow_Abundance_Plot +
-  geom_line(data=Echo_Concentration[Echo_Concentration$Equation != "No correction",],aes(x=Depth,y=Concentration,group=Equation,color=Equation, linetype = Equation),linewidth=1) +
+  geom_line(data=Echo_Concentration,aes(x=Depth,y=Concentration,group=Equation,color=Equation, linetype = Equation),linewidth=1) +
   scale_color_viridis_d(labels=c("Slope = 1","Top 50% of Echo Data","All Echo Data", "No Correction")) +
   scale_linetype(labels=c("Slope = 1","Top 50% of Echo Data","All Echo Data","No Correction")) +
   theme(legend.position = "none") +
   theme(text = element_text(size=16),
         axis.text.x.bottom = element_text(hjust=1, angle=45))
 fname=paste0(figure_dir,"OB_Shallow_Abundance_Comparison_Sv_Corrected_Only.png")
-ggsave(file=fname,scale=2)
+# ggsave(file=fname,scale=2)
 
 temp = echo_grouped_sv[,c(1,2,6,15)] %>% 
   reframe(Depth_Bin = Depth_Bin, Mean_Sv = rowMeans(select(., 2:4), na.rm = TRUE))
@@ -1487,14 +1489,14 @@ Echo_Concentration = data.frame(Depth = rep(temp$Depth_Bin, times=4),
 Echo_Concentration$Concentration[is.nan(Echo_Concentration$Concentration)] = 0
 
 OB_Mid_Abundance_Plot_Sv = OB_Mid_Abundance_Plot +
-  geom_line(data=Echo_Concentration[Echo_Concentration$Equation != "No correction",],aes(x=Depth,y=Concentration,group=Equation,color=Equation, linetype = Equation),linewidth=1) +
+  geom_line(data=Echo_Concentration,aes(x=Depth,y=Concentration,group=Equation,color=Equation, linetype = Equation),linewidth=1) +
   scale_color_viridis_d(labels=c("Slope = 1","Top 50% of Echo Data","All Echo Data", "No Correction")) +
   scale_linetype(labels=c("Slope = 1","Top 50% of Echo Data","All Echo Data","No Correction")) +
   theme(legend.position = "none") +
   theme(text = element_text(size=16),
         axis.text.x.bottom = element_text(hjust=1, angle=45))
 fname=paste0(figure_dir,"OB_Mid_Abundance_Comparison_Sv_Corrected_Only.png")
-ggsave(file=fname,scale=2)
+# ggsave(file=fname,scale=2)
 
 temp = echo_grouped_sv[,c(1,3,5,16)] %>% 
   reframe(Depth_Bin = Depth_Bin, Mean_Sv = rowMeans(select(., 2:4), na.rm = TRUE))
@@ -1512,30 +1514,31 @@ Echo_Concentration = data.frame(Depth = rep(temp$Depth_Bin, times=4),
 Echo_Concentration$Concentration[is.nan(Echo_Concentration$Concentration)] = 0
 
 OB_Deep_Abundance_Plot_Sv = OB_Deep_Abundance_Plot +
-  geom_line(data=Echo_Concentration[Echo_Concentration$Equation != "No correction",],aes(x=Depth,y=Concentration,group=Equation,color=Equation, linetype = Equation),linewidth=1) +
+  geom_line(data=Echo_Concentration,aes(x=Depth,y=Concentration,group=Equation,color=Equation, linetype = Equation),linewidth=1) +
   scale_color_viridis_d(labels=c("Slope = 1","Top 50% of Echo Data","All Echo Data", "No Correction")) +
   scale_linetype(labels=c("Slope = 1","Top 50% of Echo Data","All Echo Data","No Correction")) +
   # theme(legend.position = "none") +
   theme(text = element_text(size=16),
         axis.text.x.bottom = element_text(hjust=1, angle=45))
 fname=paste0(figure_dir,"OB_Deep_Abundance_Comparison_Sv_Corrected_Only.png")
-ggsave(file=fname,scale=2)
+# ggsave(file=fname,scale=2)
 
 echo_grouped_sv %>% 
   select(c(4,17,2,6,15,3,5,16)) %>%
-  mutate(across(1:8, cfin_correction_1)) %>%
+  mutate(across(1:8, cfin_correction_3)) %>%
   filter(row_number() >= 17) %>%
   reframe(sd(as.matrix(.),na.rm=T))
 
 fig = ggarrange(print(GMB_Shallow_Abundance_Plot_Sv), print(GMB_Mid_Abundance_Plot_Sv), print(GMB_Deep_Abundance_Plot_Sv),
           labels="AUTO",ncol=3,widths=c(0.9,0.75,1))
 annotate_figure(fig, bottom = textGrob("Concentration (individuals/m^3)",gp = gpar(cex = 1.2),vjust=-1.5))
-ggsave(filename = paste0(figure_dir,"GMB_Abundance_Comparison_Sv_Corrected_Only.png"),width=15,height=8,units="in")
+ggsave(filename = paste0(figure_dir,"GMB_Abundance_Comparison_Sv.png"),width=15,height=8,units="in")
 
 fig = ggarrange(print(OB_Shallow_Abundance_Plot_Sv), print(OB_Mid_Abundance_Plot_Sv), print(OB_Deep_Abundance_Plot_Sv),
           labels = c("D","E","F"),ncol=3,widths=c(0.9,0.75,1))
 annotate_figure(fig, bottom = textGrob("Concentration (individuals/m^3)",gp = gpar(cex = 1.2),vjust=-1.5))
-ggsave(filename = paste0(figure_dir,"OB_Abundance_Comparison_Sv_Corrected_Only.png"),width=15,height=8,units="in")
+ggsave(filename = paste0(figure_dir,"OB_Abundance_Comparison_Sv.png"),width=15,height=8,units="in")
+
 #####
 
 ## Bias figure
@@ -1830,7 +1833,7 @@ plot1 = ggplot() +
                        drop = F,
                        labels = c("1","2","3","4","5")) +
   scale_y_log10(limits=c(0.03,10000),
-                name="Predicted C5 Abundance /\nActual C5 Abundance") +
+                name="Predicted C5 Abundance /\nNet C5 Abundance") +
   theme_bw() +
   coord_cartesian(xlim=c(0.5,4.5)) +
   scale_x_discrete(position = "top",
@@ -1880,7 +1883,7 @@ plot2 = ggplot() +
                    drop = F,
                    labels = c("Overall Mean and SD", "Corrected Mean and SD")) +
   scale_y_continuous(limits = c(-1, 2),
-    name="log10(Predicted C5 Abundance /\nActual C5 Abundance)") +
+    name="log10(Predicted C5 Abundance /\nNet C5 Abundance)") +
   theme(axis.title.x = element_blank(),
         axis.ticks.x = element_blank(),
         axis.text.x = element_text(size=10),
@@ -1895,7 +1898,7 @@ ggsave(paste0(figure_dir, "Both_Basins_Concentration_Ratio.png"),height=8,width=
 
 #####
 
-## Histogram of missed echoes
+## Boxplot of missed echoes
 
 Missed_Echoes = read.csv(paste0(data_dir,'Spreadsheets/Missed_Echoes.csv'),header=F)
 
@@ -1905,17 +1908,8 @@ Missed_Echoes_GMB = Missed_Echoes %>%
   gather()
 Missed_Echoes_GMB$key = rep(c("10m","5m"),times=23)
 
-Missed_Echoes_GMB_Plot = ggplot() +
-  geom_histogram(data=Missed_Echoes_GMB,breaks=seq(0,100,10),aes(x=value,group=key,fill=key),position=position_dodge2(preserve="single")) +
-  scale_fill_viridis_d(begin=0.5) +
-  theme_bw() +
-  labs(x=element_blank(),y="# Dives",fill="Distance from Seafloor") +
-  theme(text = element_text(size=16),
-        axis.text.x = element_blank(),
-        axis.ticks.x = element_blank())
-ggsave(paste0(figure_dir,"Missed_Echoes_GMB.png"))
-
 Missed_Echoes_GMB %>% group_by(key) %>% reframe(median(value))
+
 
 Missed_Echoes_OB = Missed_Echoes %>% 
   filter(V2 == "OB") %>% 
@@ -1923,26 +1917,36 @@ Missed_Echoes_OB = Missed_Echoes %>%
   gather()
 Missed_Echoes_OB$key = rep(c("10m","5m"),times=23)
 
-Missed_Echoes_OB_Plot = ggplot() +
-  geom_histogram(data=Missed_Echoes_OB,breaks=seq(0,100,10),aes(x=value,group=key,fill=key),position=position_dodge2(preserve="single")) +
-  scale_fill_viridis_d(begin=0.5) +
-  theme_bw() +
-  labs(x="Percentage of Volume Backscatter Near Seafloor",y="# Dives",fill="Distance from Seafloor") +
-  theme(text = element_text(size=16))
-ggsave(paste0(figure_dir,"Missed_Echoes_OB.png"))
-
 Missed_Echoes_OB %>% group_by(key) %>% reframe(median(value))
 
-ggarrange(Missed_Echoes_GMB_Plot,Missed_Echoes_OB_Plot,ncol=1,common.legend = T,legend="right",labels="AUTO") + 
-  theme(plot.background = element_rect(fill = 'white',color='white'))
-ggsave(paste0(figure_dir,"Missed_Echoes_GMB_OB.png"),width=8,height=6,units="in")
 
-Missed_Echoes = cbind(depth = rep(c("5m","10m"),each=46), rbind(Missed_Echoes_5m,Missed_Echoes_10m))
+Missed_Echoes_Combined = cbind(basin = rep(c("GMB","OB"),each=46), rbind(Missed_Echoes_GMB,Missed_Echoes_OB))
 
-ggplot() +
-  geom_histogram(data=Missed_Echoes,binwidth=10, aes(x=value,group=depth,fill=depth),position=position_dodge2(padding=0.2)) +
-  scale_fill_viridis_d(begin=0.2, end=0.5) +
-  scale_x_continuous(breaks=seq(0,100,20)) +
-  theme_bw() +
-  labs(x="Percentage of Missed Echoes",y="Count",fill="Cutoff Depth")
+ggplot(data = Missed_Echoes_Combined, aes(x = basin, y = value)) +
+  geom_boxplot(aes(fill = key), linewidth = 0.75) +
+  scale_fill_viridis_d(begin = 0.5) +
+  stat_summary(aes(group = key), fun = mean, geom = "point", show.legend = F, position = position_dodge(0.75), shape=4, size=4, stroke = 1) +
+  labs(x = "Basin",
+       y = "Percentage of Volume Backscatter Near Seafloor",
+       fill = "Distance Threshold") +
+  theme_bw()
+
 ggsave(paste0(figure_dir,"Missed_Echoes_Combined.png"))
+
+#####
+
+## OPC data variances
+
+sd(c(OB_Shallow$OPC_Concentration[17:nrow(OB_Shallow)],
+  OB_Mid$OPC_Concentration[17:nrow(OB_Mid)],
+  OB_Deep$OPC_Concentration[17:nrow(OB_Deep)]), na.rm = T)
+
+sd(c(GMB_Shallow$OPC_Concentration[17:nrow(GMB_Shallow)],
+     GMB_Mid$OPC_Concentration[17:nrow(GMB_Mid)],
+     GMB_Deep$OPC_Concentration[17:nrow(GMB_Deep)]), na.rm = T)
+
+## Echosounder data variances
+
+Sv_Net_Intervals %>%
+  group_by(Basin, Equation) %>%
+  reframe(mean(Sv_Mean), sd(Sv_Mean), mean(Net_Mean), sd(Net_Mean))

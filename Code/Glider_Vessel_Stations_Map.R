@@ -127,6 +127,28 @@ OB_Glider_Endpoints = Glider_Endpoints[which(
     Glider_Endpoints$Date == "26-Sep"
 ),]
 
+# GMB specific data formatting
+
+GMB_cages = Cage_Data[which(Cage_Data$Longitude > -66.5), ]
+
+GMB_tracks = Multinet_GPS_Data[which(Multinet_GPS_Data$Lon > -66.5), ]
+GMB_labels = Multinet_Labels[which(Multinet_Labels$Lon > -66.5), ]
+
+GMB_Glider_Data = Glider_Data[which(
+  Glider_Data$Date == "21-Sep" |
+    Glider_Data$Date == "24-Sep" | Glider_Data$Date == "25-Sep"
+),]
+GMB_Glider_Startpoints = Glider_Startpoints[which(
+  Glider_Startpoints$Date == "21-Sep" |
+    Glider_Startpoints$Date == "24-Sep" |
+    Glider_Startpoints$Date == "25-Sep"
+),]
+GMB_Glider_Endpoints = Glider_Endpoints[which(
+  Glider_Endpoints$Date == "21-Sep" |
+    Glider_Endpoints$Date == "24-Sep" |
+    Glider_Endpoints$Date == "25-Sep"
+),]
+
 #####
 
 # Full plot latitudes/longitudes
@@ -244,8 +266,8 @@ ggsave(filename = "Visuals/Thesis_Study_Area_Plot.png")
 
 #####
 
-lons = c(-66.82,-66.75)
-lats = c(44.83, 44.90)
+lons = c(-66.57,-66.38)
+lats = c(44.65, 44.8)
 
 Zoomed_Plot = ggplot() +
   
@@ -264,10 +286,10 @@ Zoomed_Plot = ggplot() +
   
   coord_sf(xlim = lons, ylim = lats, expand = FALSE) +
   
-  annotation_scale(width_hint = 0.25, location = "t", style = "bar" ) +
+  annotation_scale(width_hint = 0.25, location = "tl", style = "bar" ) +
   
   geom_path(
-    data = Glider_Data[which(Glider_Data$Date == "20-Sep"),],
+    data = Glider_Data[which(Glider_Data$Date == "21-Sep"),],
     aes(x = Longitude, y = Latitude),
     color = "black",
     alpha = 1,
@@ -276,7 +298,7 @@ Zoomed_Plot = ggplot() +
   ) +
   
   geom_path(
-    data = OB_tracks[which(OB_tracks$Date == "20-Sep"),],
+    data = GMB_tracks[which(GMB_tracks$Date == "21-Sep"),],
     aes(x = Lon, y = Lat, group = Track),
     alpha = 1,
     linewidth = 0.9,
@@ -286,7 +308,7 @@ Zoomed_Plot = ggplot() +
   ) +
   
   geom_point(
-    data = OB_cages[which(OB_cages$Date == "20-Sep"),],
+    data = GMB_cages[which(GMB_cages$Date == "21-Sep"),],
     aes(x = Longitude, y = Latitude),
     fill = "white",
     shape = 21,
@@ -295,7 +317,7 @@ Zoomed_Plot = ggplot() +
   ) +
   
   geom_text(
-    data = OB_labels[which(OB_labels$Date == "20-Sep"),],
+    data = GMB_labels[which(GMB_labels$Date == "21-Sep"),],
     aes(x = Lon, y = Lat, label = Track),
     hjust = "left",
     vjust = "top",
@@ -311,7 +333,8 @@ Zoomed_Plot = ggplot() +
   
   theme(panel.grid = element_blank(),
         axis.text=element_text(size=10),
-        axis.title = element_text(size = 10))  +
+        axis.title = element_text(size = 10),
+        axis.text.x.bottom = element_text(hjust = 1, angle = -90))  +
   
   labs(x = "Longitude",
        y = "Latitude",
@@ -393,7 +416,7 @@ ggplot() +
   geom_text(data=OB_Stations,aes(x=Longitude,y=Latitude,label=c("OB1","OB2","OB3")),
             size=4) +
   
-  annotation_scale(width_hint = 0.25, location = "tr", style = "bar") +
+  annotation_scale(width_hint = 0.25, location = "tr") +
   
   labs(x = "Longitude",
        y = "Latitude",
@@ -404,16 +427,19 @@ ggplot() +
   
   theme(panel.grid = element_blank(),
         axis.text=element_text(size=10),
-        axis.title = element_text(size = 10)) +
+        axis.title = element_text(size = 10),
+        axis.text.x.bottom = element_text(hjust = 1, angle = -90)) +
   scale_y_continuous(breaks = c(44.50, 44.55, 44.60, 44.65, 44.70, 44.75, 44.8, 44.85, 44.90)) +
   scale_x_continuous(breaks = c(-66.9, -66.8, -66.7, -66.6, -66.5, -66.4, -66.3))
 print(Glider_Plot)
 
 Glider_Plot_With_Inset = ggdraw() +
   draw_plot(Glider_Plot) +
-  draw_plot(Inset_Map, x = 0.75, y = 0.2, width = 0.2, height = 0.2)
+  draw_plot(Inset_Map, x = 0.75, y = 0.3, width = 0.2, height = 0.2)
 
-ggarrange(Glider_Plot_With_Inset, Zoomed_Plot, ncol = 2, common.legend = T, legend = "left")
+ggarrange(Glider_Plot_With_Inset, Zoomed_Plot, ncol = 2, common.legend = T, legend = "left") +
+  theme(plot.background = element_rect(fill = 'white',color='white'))
+ggsave('Visuals/Paper_Map_Plots.png', scale = 1.5)
 
 #####
 

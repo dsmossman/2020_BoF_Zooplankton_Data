@@ -776,17 +776,13 @@ if date == "21"
     P(3).avg_sv(5213:5256,:) = NaN;
     P(4).avg_sv(5213:5256,:) = NaN;
 
-    bott_dep(:,6268:6307) = NaN;
-    P(1).avg_sv(6268:6307,:) = NaN;
-    P(2).avg_sv(6268:6307,:) = NaN;
-    P(3).avg_sv(6268:6307,:) = NaN;
-    P(4).avg_sv(6268:6307,:) = NaN;
+  
 
-    bott_dep(:,7284:end) = NaN;
-    P(1).avg_sv(7284:end,:) = NaN;
-    P(2).avg_sv(7284:end,:) = NaN;
-    P(3).avg_sv(7284:end,:) = NaN;
-    P(4).avg_sv(7284:end,:) = NaN;
+    bott_dep(:,6198:end) = NaN;
+    P(1).avg_sv(6198:end,:) = NaN;
+    P(2).avg_sv(6198:end,:) = NaN;
+    P(3).avg_sv(6198:end,:) = NaN;
+    P(4).avg_sv(6198:end,:) = NaN;
 end
 
 %% Create ping by depth figure with color scale corresponding to Sv for all four frequencies
@@ -801,7 +797,7 @@ caxis([-80 -50]);
 xlabel('Time')
 ylabel('Depth (m)')
 ylim([0,200])
-title('130 kHz')
+title('38 kHz')
 xt = get(gca,'XTick');
 xtlbl = [];
 for i = 1:numel(xt)

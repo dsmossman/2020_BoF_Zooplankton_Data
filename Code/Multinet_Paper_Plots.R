@@ -1960,5 +1960,9 @@ sd(c(GMB_Shallow$OPC_Concentration[17:nrow(GMB_Shallow)],
 ## Echosounder data variances
 
 Sv_Net_Intervals %>%
-  group_by(Basin, Equation) %>%
-  reframe(mean(Sv_Mean), sd(Sv_Mean), mean(Net_Mean), sd(Net_Mean))
+  group_by(Equation) %>%
+  mutate(net = case_when(
+    net %in% c(1, 2, 3) ~ "Deep",
+    net %in% c(4, 5) ~ "Shallow"
+  )) %>%
+  t_test(Sv_Mean ~ net) %>% print(n=40)

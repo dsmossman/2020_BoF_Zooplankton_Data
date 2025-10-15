@@ -865,6 +865,7 @@ for(k in 1:length(echo_sv)) {
   }
 }
 
+# renaming columns with their station numbers and making depth a factor
 names(echo_grouped_sv)[2:ncol(echo_grouped_sv)] = c(3, 4,
                                                     5, 6, 7,
                                                     8, 9, 10, 

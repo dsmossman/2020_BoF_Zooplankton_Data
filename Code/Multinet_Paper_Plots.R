@@ -135,10 +135,12 @@ for (i in 1:length(DFs)) {
 
 stations = c(8, 12, 15)
 OPC_casts = list(c(13, 14),c(21,22),c(27,28))
+# constants for OPC calculation
 dz = 1
 min_size = 1.5
 max_size = 2
 
+# calculation of OPC particle abundance to C5 concentration
 OPC_to_C5 = function(concentration, speed) {
   B0 = 0.0384
   B1 = 0.5343
@@ -151,31 +153,38 @@ OPC_to_C5 = function(concentration, speed) {
 
 GMB_Deep_Net_OPC_Comparison = list()
 
-for(i in 1:3) {
+for(i in 1:3) { # for each station
+  # get the stage C5 cfin concentration in the nets
   temp1 = stages %>% filter(station == stations[i] & stage %in% c("CV")) %>%
     group_by(net, stage) %>%
     reframe(cfin_biomass = mean(biomass,na.rm=T), cfin_concentration = mean(concentration,na.rm=T))
-  
+
+  # round net depth intervals to the nearest 5
   require(plyr)
   temp1$Intervals = Net_Metadata[Net_Metadata$Station_Number == stations[i],] %>% 
     group_by(Net_Num) %>%
     reframe(depth = round_any(mean(`Pressure_(dbar)`), 5, f = ceiling)) %>% slice(c(1:5))
   detach("package:plyr")
-  
+
+  # group by the new depth intervals and sum the concentration
   temp1 = temp1 %>% group_by(Intervals$depth) %>% reframe (cfin_concentration = sum(cfin_concentration))
-  
+
+  # get the OPC data for the station and calculate the C5 concentration
   temp2 = OPC_Data_Full %>% filter(OPC_cast_num %in% OPC_casts[[i]]) %>%
     filter(depth>1) %>% 
     ungroup() %>%
     reframe(opc_abundance(across(), dz = dz, min_size = min_size, max_size = max_size),
             C5_concentration = OPC_to_C5(concentration, speed))
-  
+
+  # setting up the final data frame in 1 m depth bins
   temp3 = data.frame(Depth_Bin = seq(0,199,1), Net_Concentration = NA, OPC_Concentration = NA)
 
+  # assign the OPC concentrations
   for(j in 1:nrow(temp2)) {
     temp3$OPC_Concentration[temp3$Depth_Bin == temp2$depth[j]] = temp2$C5_concentration[j]
   }
-  
+
+  # assign the net concentrations
   for(k in 1:nrow(temp1)) {
     if(k == 1) {
       temp3$Net_Concentration[temp3$Depth_Bin <= temp1$`Intervals$depth`[k]] = temp1$cfin_concentration[k]
@@ -184,7 +193,8 @@ for(i in 1:3) {
                                                      temp3$Depth_Bin >= temp1$`Intervals$depth`[k-1])] = temp1$cfin_concentration[k]
     }
   }
-  
+
+  # transform the dataframe into 5-m depth intervals and stick it in the list
   GMB_Deep_Net_OPC_Comparison[[i]] = temp3 %>% 
     transform(Depth_Bin=cut(Depth_Bin, seq(0,200,5),right=F)) %>% 
     group_by(Depth_Bin) %>% 
@@ -192,6 +202,7 @@ for(i in 1:3) {
   
 }
 
+# per-station plots
 station8_plot = ggplot(data=GMB_Deep_Net_OPC_Comparison[[1]], aes(x=factor(Depth_Bin))) +
   geom_col(aes(y=OPC_Concentration)) +
   geom_step(aes(y=Net_Concentration, group=NA),linewidth=1,direction="mid") +
@@ -421,7 +432,7 @@ for(i in 1:3) {
   temp1 = stages %>% filter(station == stations[i] & stage %in% c("CV")) %>%
     group_by(net, stage) %>%
     reframe(cfin_biomass = mean(biomass,na.rm=T), cfin_concentration = mean(concentration,na.rm=T))
-  if(i != 3) {
+  if(i != 3) { # below is to complete the dataframe (should probably think about reconfiguring to use the complete() function...)
   temp1 = rbind(temp1, data.frame(net=c(4),
                                   stage=c("CV"),
                                   cfin_biomass=0,
@@ -772,15 +783,16 @@ for(i in 1:length(DFs)) {
     
     echo_sv[[i]][[j]][[1]] = 10 * log10(integration[[j]][[5]]) # 200-455 kHz SvDiff
     
-    mask = 15.8 <= echo_sv[[i]][[j]][[1]] & 
-      echo_sv[[i]][[j]][[1]] <= 16.3 # mask
+    mask = 13.7 <= echo_sv[[i]][[j]][[1]] & 
+      echo_sv[[i]][[j]][[1]] <= 14.2 # mask
     echo_sv[[i]][[j]][[2]] = (10 * log10(integration[[j]][[7]])) * mask # masked 455 kHz
-    echo_sv[[i]][[j]][[2]][echo_sv[[i]][[j]][[2]] == 0] = NaN
-    echo_sv[[i]][[j]][[2]][is.na(echo_sv[[i]][[j]][[2]])] = NaN
+    echo_sv[[i]][[j]][[2]][echo_sv[[i]][[j]][[2]] == 0] = NaN # remove 0s
+    echo_sv[[i]][[j]][[2]][is.na(echo_sv[[i]][[j]][[2]])] = NaN # remove NAs
 
   }
 }
 
+# creating dataframes grouped into 5 m depth bins
 echo_grouped_sv = data.frame(matrix(0, ncol=17, nrow=40))
 echo_grouped_sv[,1] = (paste0("[",seq(0,195,5),",",seq(5,200,5),")"))
 names(echo_grouped_sv)[1] = "Depth_Bin"

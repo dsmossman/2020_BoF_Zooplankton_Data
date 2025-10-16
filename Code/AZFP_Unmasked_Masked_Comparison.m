@@ -72,9 +72,9 @@ title('200kHz =< 455kHz')
 
 % Controlled parameter tuning based on MultiNet data
 % Do correlations with windows in 200-455 kHz of 1 dB, 5 dB, 10 dB
-dB_Diff_Lower = [7.4, 13.7, 7.8];
+dB_Diff_Lower = [7.4, 8, 7.8];
 % dB_Diff_Lower = [7.4, 16.1, 7.8];
-dB_Diff_Upper = [7.5, 14.2, 8.8];
+dB_Diff_Upper = [7.5, 11, 8.8];
 % dB_Diff_Upper = [7.5, 19.6, 8.8];
 
 % is the 455 kHz data "real" or just noise? Calibration issues? Offset or

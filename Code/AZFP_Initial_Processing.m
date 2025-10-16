@@ -132,6 +132,10 @@ clear order
 % If the glider-mounted echosounder doesn't have tilt, we could possibly
 % fill that in with the pitch angle from the glider data?
 
+% Offset based off seafloor echo strength; 455 Khz seafloor is ~3 dB higher
+% than others, so subtract 3 db from all the values
+Output(3).Sv = Output(3).Sv - 3;
+
 % In the Output file, the rows and columns of different subsets of data
 % correspond to different important values
 % * The Output Date row number is the number of pings in the entire file

@@ -783,8 +783,7 @@ for(i in 1:length(DFs)) {
     
     echo_sv[[i]][[j]][[1]] = 10 * log10(integration[[j]][[5]]) # 200-455 kHz SvDiff
     
-    mask = 13.7 <= echo_sv[[i]][[j]][[1]] & 
-      echo_sv[[i]][[j]][[1]] <= 14.2 # mask
+    mask = 13.7 <= echo_sv[[i]][[j]][[1]] & echo_sv[[i]][[j]][[1]] <= 14.2 # mask
     echo_sv[[i]][[j]][[2]] = (10 * log10(integration[[j]][[7]])) * mask # masked 455 kHz
     echo_sv[[i]][[j]][[2]][echo_sv[[i]][[j]][[2]] == 0] = NaN # remove 0s
     echo_sv[[i]][[j]][[2]][is.na(echo_sv[[i]][[j]][[2]])] = NaN # remove NAs

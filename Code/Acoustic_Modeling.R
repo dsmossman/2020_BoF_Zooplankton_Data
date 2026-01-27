@@ -58,9 +58,18 @@ large_copepod_TS = c(-147.6,	-140.2,	-126.0,	-117.1);
 small_copepod_TS = c(-157.4,	-149.9,	-135.7,	-126.6);
 cfin_TS = c(-129.7,	-122.3,	-108.3,	-99.9);
 
-# For siphonophores: Joe's values
+# For siphonophores: exact fluid sphere solution with diameter values from tow data and 
+# g/h values from Lavery et al 2007
 
-siph_TS = c(-80, -70, -80, -80); 
+r = 10 # range 
+a = 0.27/2/1000 # radius in m
+c = 1492.6 # soundspeed surrounding fluid
+rho = 1025.08232 # density surrounding fluid
+g = 0.0012 # density contrast
+h = 0.22 # soundspeed contrast
+freqs = c(130 * 1000, 200 * 1000, 455 * 1000, 769 * 1000) # frequencies in Hz
+
+siph_TS = sapply(freqs, TS.sphere, r=r, a=a, c=c, h=h, g=g, rho=rho) 
 
 # For euphausiids: ZooScatR
 

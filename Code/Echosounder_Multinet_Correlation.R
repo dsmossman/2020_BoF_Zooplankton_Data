@@ -169,7 +169,7 @@ echo_masked_plot = ggplot(data = correlation_masked_sv, aes(x = Echo_Masked_Sv, 
   geom_text(inherit.aes = F, x = -35, y = -57, label = "Full Model", color = "black", fontface = "bold", size = 6) +
   coord_cartesian(xlim = c(-95,-25), ylim = c(-140, -55)) +
   theme_bw() + theme(text = element_text(size = 16)) +
-  labs(x = "Masked Sv(echo) (dB)", y = "Sv(full) (dB)", shape = "Frequency", color = "Frequency")
+  labs(x = "Filtered Sv(echo) (dB)", y = "Sv(model) (dB)", shape = "Frequency", color = "Frequency")
 
 ggsave(filename = paste0(figure_dir, "Multi_Echo_Sv_Masked_Correlation.png"),scale=2)
 
@@ -267,7 +267,7 @@ copepod_plot = ggplot(data = correlation_copepod, aes(x = Echo_Masked_Sv, y = Co
   geom_text(inherit.aes = F, x = -40, y = -87, label = "Copepod Model", color = "black", fontface = "bold", size = 6) +
   coord_cartesian(xlim = c(-95,-25), ylim = c(-140, -85)) +
   theme_bw() + theme(text = element_text(size = 16)) +
-  labs(x = "Masked Sv(echo) (dB)", y = "Sv(cop) (dB)", shape = "Frequency", color = "Frequency")
+  labs(x = "Filtered Sv(echo) (dB)", y = "Sv(model_cop) (dB)", shape = "Frequency", color = "Frequency")
 
 ggsave(filename = paste0(figure_dir, "Copepod_Echo_Sv_Masked_Correlation_Freq_Only.png"),scale=2)
 
@@ -360,7 +360,7 @@ cfin_plot = ggplot(data = correlation_cfin, aes(x = Echo_Masked_Sv, y = Cfin_Sv,
   geom_text(inherit.aes = F, x = -37, y = -65, label = "C. Fin Model", color = "black", fontface = "bold", size = 6) +
   coord_cartesian(xlim = c(-95,-25), ylim = c(-125, -65)) +
   theme_bw() + theme(text = element_text(size = 16)) +
-  labs(x = "Masked Sv(echo) (dB)", y = "Sv(cfin) (dB)", shape = "Frequency", color = "Frequency")
+  labs(x = "Filtered Sv(echo) (dB)", y = "Sv(model_cfin) (dB)", shape = "Frequency", color = "Frequency")
 
 ggsave(filename = paste0(figure_dir, "Cfin_Echo_Sv_Masked_Correlation_Freq_Only.png"),scale=2)
 
@@ -407,17 +407,17 @@ models = correlation_cfin %>%
   filter(Echo_Masked_Sv > median(Echo_Masked_Sv)) %>%
   do(model = summary(lm(Cfin_Sv ~ Echo_Masked_Sv, data = .)))
 
-plot(fitted(models[[2]][[1]]),resid(models[[2]][[1]]))
-abline(0,0)
-
-plot(fitted(models[[2]][[2]]),resid(models[[2]][[2]]))
-abline(0,0)
-
-plot(fitted(models[[2]][[3]]),resid(models[[2]][[3]]))
-abline(0,0)
-
-plot(fitted(models[[2]][[4]]),resid(models[[2]][[4]]))
-abline(0,0)
+# plot(fitted(models[[2]][[1]]),resid(models[[2]][[1]]))
+# abline(0,0)
+# 
+# plot(fitted(models[[2]][[2]]),resid(models[[2]][[2]]))
+# abline(0,0)
+# 
+# plot(fitted(models[[2]][[3]]),resid(models[[2]][[3]]))
+# abline(0,0)
+# 
+# plot(fitted(models[[2]][[4]]),resid(models[[2]][[4]]))
+# abline(0,0)
 
 # Determining other values when slope = 1
 test = data.frame(Echo_Masked_Sv = correlation_cfin$Echo_Masked_Sv[correlation_cfin$Frequency == "455kHz"],
@@ -453,7 +453,7 @@ full_plot = ggarrange(echo_masked_plot, copepod_plot, cfin_plot, ncol=1, common.
 ggsave(full_plot, filename = paste0(figure_dir, 'Sv_Correlation_Plot_Full.png'),width=6,height=10,units="in")
 
 #####
-## Varying correlation model for Sv(echo) and Sv(cfin)
+## Varying correlation model for Sv(echo) and Sv(model_cfin)
 
 cfin_plot_vary = ggplot(data = correlation_cfin[correlation_cfin$Frequency == "455kHz",], aes(x = Echo_Masked_Sv, y = Cfin_Sv)) +
   geom_point(color = "#35b779") +
@@ -473,7 +473,7 @@ cfin_plot_vary = ggplot(data = correlation_cfin[correlation_cfin$Frequency == "4
   scale_linetype_manual("455 kHz Equation",values = c("All Echo Data"=1, "Slope=1"=4,"Top 50% of Echo Data"=3,"y=x"=1),
                         breaks = c("All Echo Data", "Top 50% of Echo Data","Slope=1","y=x")) +
   coord_cartesian(xlim = c(-85,-50), ylim = c(-110, -75)) +
-  labs(x = "Masked Sv(echo) (dB)", y = "Sv(cfin) (dB)") +
+  labs(x = "Filtered Sv(echo) (dB)", y = "Sv(model_cfin) (dB)") +
   theme_bw()
 ggsave(filename = paste0(figure_dir, "Cfin_Echo_Sv_Masked_Correlation_Varying_Corr_Eq.png"),scale=2)
 

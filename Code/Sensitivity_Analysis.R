@@ -3,7 +3,7 @@
 
 rm(list = ls())
 
-setwd("C:/Users/dmossman/Box/2022 MSc Thesis Work/")
+setwd("C:/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/")
 
 library(tidyverse)
 library(R.matlab)
@@ -55,7 +55,7 @@ remove_outliers = function(x, var) {
 
 basin_list = rbind(t(t(rep("OB", times = 25))), t(t(rep("GMB", times = 40))), t(t(rep("OB", times = 15))))
 
-dB_lower = seq(13.7, 18.7, 0.1)
+dB_lower = seq(9, 20, 0.1)
 dB_span = seq(0.5, 5, 0.5)
 
 #####
@@ -75,7 +75,7 @@ dates = c("19", "20", "21", "24", "25", "26")
 # Load in each day
 for (i in 1:length(dates)) {
   filename = paste0(
-    "/Users/dmossman/Box/2022 MSc Thesis Work/Processed_Data/",
+    "/Users/Delphine/Documents/2020_BoF_Zooplankton_Data/Processed_Data/",
     dates[i],
     "Sept_Masked_Data.mat"
   )
@@ -446,21 +446,44 @@ load(paste0(processed_dir,"sensitivity_r_squared_cfin_values.rda"))
 load(paste0(processed_dir,"sensitivity_RMSE_cfin_values.rda"))
 
 
-ggplot(data = RMSE_cfin, aes(x = dB_Lower, y = Value, group=dB_Span, color=dB_Span)) +
-  geom_line() +
+RMSE_cfin_plot = ggplot(data = RMSE_cfin, aes(x = dB_Lower, y = Value, group=dB_Span, color=dB_Span)) +
+  geom_line(linewidth = 0.75) +
+  geom_point(data = RMSE_cfin[RMSE_cfin$dB_Lower == 14.5 & RMSE_cfin$dB_Span == 3,], 
+             inherit.aes = F, 
+             aes(x = 14.5, y = Value),
+             color = "red",
+             size = 3) +
+  scale_x_continuous(labels = c(10, 12.5, 15, 17.5, 20)) +
+  scale_color_viridis_d(option = "turbo") +
   labs(x = "dB Window Lower Bound",
-       y = "RMSE (Sv(net) vs Sv(cfin))",
-       color = "dB Window Span")
+       y = "RMSE (Sv(model_cfin) vs Sv(echo))",
+       color = "dB Window Span") +
+  theme_bw() +
+  coord_cartesian(xlim = c(9, 20), expand = F)
 
-ggsave(filename = paste0(figure_dir,'Sensitivity_RMSE_Values_Cfin.png'),scale=2)
+ggsave(RMSE_cfin_plot, filename = paste0(figure_dir,'Sensitivity_RMSE_Values_Cfin.png'),scale=2)
 
-ggplot(data = r_squared_cfin, aes(x = dB_Lower, y = Value, group=dB_Span, color=dB_Span)) +
-  geom_line() +
+r_squared_cfin_plot = ggplot(data = r_squared_cfin, aes(x = dB_Lower, y = Value, group=dB_Span, color=dB_Span)) +
+  geom_line(linewidth = 0.75) +
+  geom_point(data = r_squared_cfin[RMSE_cfin$dB_Lower == 14.5 & RMSE_cfin$dB_Span == 3,], 
+             inherit.aes = F, 
+             aes(x = 14.5, y = Value),
+             color = "red",
+             size = 3) +
+  scale_x_continuous(labels = c(10, 12.5, 15, 17.5, 20)) +
+  scale_color_viridis_d(option = "turbo") +
   labs(x = "dB Window Lower Bound",
-       y = "r^2 (Sv(net) vs Sv(cfin))",
-       color = "dB Window Span")
+       y = "R^2 (Sv(model_cfin) vs Sv(echo))",
+       color = "dB Window Span") +
+  theme_bw() +
+  coord_cartesian(xlim = c(9, 20), expand = F)
 
-ggsave(filename = paste0(figure_dir,'Sensitivity_r_squared_Values_Cfin.png'),scale=2)
+ggsave(r_squared_cfin_plot, filename = paste0(figure_dir,'Sensitivity_r_squared_Values_Cfin.png'),scale=2)
+
+ggarrange(RMSE_cfin_plot, r_squared_cfin_plot, ncol = 1, common.legend = T, legend = "right") +
+  theme(panel.background = element_rect(fill = "white", color = "white"))
+
+ggsave(filename = paste0(figure_dir,'Sensitivity_Values_Cfin.png'),scale=2)
 
 RMSE_cfin[which(RMSE_cfin$Value == min(RMSE_cfin$Value)),]
 r_squared_cfin[which(r_squared_cfin$Value == max(r_squared_cfin$Value)),]

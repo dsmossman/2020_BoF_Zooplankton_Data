@@ -12,7 +12,7 @@ library(tidyverse)
 # library(ocedata)
 library(R.utils)
 library(readxl)
-# library(ZooScatR)
+library(ZooScatR)
 
 ## Project Structure
 sourceDirectory('Code/Hansen Zooplankton Code and Sample Data/src',
@@ -58,7 +58,7 @@ large_copepod_TS = c(-147.6,	-140.2,	-126.0,	-117.1);
 small_copepod_TS = c(-157.4,	-149.9,	-135.7,	-126.6);
 cfin_TS = c(-129.7,	-122.3,	-108.3,	-99.9);
 
-# For siphonophores: exact fluid sphere solution with diameter values from tow data and 
+# For siphonophores: exact fluid sphere solution with diameter and 
 # g/h values from Lavery et al 2007
 
 r = 10 # range 

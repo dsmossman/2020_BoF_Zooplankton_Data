@@ -151,17 +151,17 @@ Output(3).Sv = Output(3).Sv - 3;
 % row/column format but for Sv values instead of depths
 
 %% Trim Transmit Pulse/Near Field from Sv
-% Using 5 m as the calculated Rb for the highest frequency (769 kHz) is ~2 m;
+% Using 2 m as the calculated Rb for the highest frequency (769 kHz) is ~1 m;
 % therefore this should eliminate the near-field data from all four
 % frequencies
-I = find(Output(1).Range(1,:) <= 5);
+I = find(Output(1).Range(1,:) <= 2);
 
 for i = 1:4
     Output(i).Sv(:,I) = [];
     Output(i).Range(:,I) = [];
 end
 
-% self explanatory, if the ping is within 5 m of the transducer, remove it
+% self explanatory, if the ping is within 2 m of the transducer, remove it
 % on all frequencies
 %% Load Glider Data and correct for depth of glider
 
@@ -295,14 +295,14 @@ end
 % detect your target."
 
 % To start getting an idea of where the noise floor cutoff range is
-% figure
-% for ii=2:50:2000  % can change to plot more or less data.
-%     scatter(Output(3).Range(1,:),Output(3).Sv(ii,:),'k') % frequency change line
-%     % plots range vs frequency-dependent Sv
-%     hold on
-%     xlabel('range')
-%     ylabel('Sv')
-% end
+figure
+for ii=2:50:2000  % can change to plot more or less data.
+    scatter(Output(4).Range(1,:),Output(4).Sv(ii,:),'k') % frequency change line
+    % plots range vs frequency-dependent Sv
+    hold on
+    xlabel('range')
+    ylabel('Sv')
+end
 
 %% KD added 31 August 2021: far field range cut-off
 % 130 kHz = 75 m, 200 kHz = 50 m, 455 kHz = 35 m, 769 kHz = 20 m

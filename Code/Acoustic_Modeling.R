@@ -40,7 +40,7 @@ load(paste0(cache_dir, 'Abundance_Data_Biomass.rda'))
 #####
 # Target Strength
 
-# DWBAapp() # launches the ZooScatR shiny app
+DWBAapp() # launches the ZooScatR shiny app
 
 # Target strength is the measure of a SINGLE zoop hit with a beam; that's why to get Sv
 # we add the concentration
